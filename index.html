@@ -1,33 +1,34 @@
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://gstatic.com";
-        import { getAuth, signInAnonymously } from "https://gstatic.com";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy } from "https://gstatic.com";
+<!-- Firebase SDKs -->
+<script type="module">
+    import { initializeApp } from "https://gstatic.com";
+    import { getAuth, signInAnonymously } from "https://gstatic.com";
+    import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy } from "https://gstatic.com";
 
-        // Konfigurasi Firebase asli milik Anda
-        const firebaseConfig = {
-            apiKey: "AIzaSyBo07LQ9Nt6vP-9VUwFaPtbsRNVBppjitQ",
-            authDomain: "edusenirupa5.firebaseapp.com",
-            projectId: "edusenirupa5",
-            storageBucket: "edusenirupa5.firebasestorage.app",
-            messagingSenderId: "792984693737",
-            appId: "1:792984693737:web:a0786adf8ccfe02ceef978",
-            measurementId: "G-399R2J145R"
-        };
+    // Konfigurasi Firebase asli milik Anda
+    const firebaseConfig = {
+        apiKey: "AIzaSyBo07LQ9Nt6vP-9VUwFaPtbsRNVBppjitQ",
+        authDomain: "://firebaseapp.com",
+        projectId: "edusenirupa5",
+        storageBucket: "edusenirupa5.firebasestorage.app",
+        messagingSenderId: "792984693737",
+        appId: "1:792984693737:web:a0786adf8ccfe02ceef978",
+        measurementId: "G-399R2J145R"
+    };
 
-        // Inisialisasi Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    // Inisialisasi Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        // Expose Firebase tools & instances to global scope
-        window.firebaseModules = { 
-            signInAnonymously, doc, setDoc, onSnapshot, collection, query, orderBy 
-        window.firebaseInstances = { app, auth, db };
-        
-        window.dispatchEvent(new Event('firebase-loaded'));
-        console.log("Firebase Terinisialisasi");
-    </script>
+    // Expose Firebase tools & instances to global scope
+    window.firebaseModules = {
+        signInAnonymously, doc, setDoc, onSnapshot, collection, query, orderBy
+    };
+    window.firebaseInstances = { app, auth, db };
+    
+    window.dispatchEvent(new Event('firebase-loaded'));
+    console.log("Firebase Berhasil Diinisialisasi");
+</script>
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
