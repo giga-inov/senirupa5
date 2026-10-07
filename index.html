@@ -1,27 +1,32 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PETUALANGAN SENI RUPA KELAS 5</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Firebase SDKs -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://gstatic.com";
+        import { getAuth, signInAnonymously } from "https://gstatic.com";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy } from "https://gstatic.com";
 
-        // Expose Firebase tools to global scope
-        window.firebaseModules = {
-            initializeApp, getAuth, signInAnonymously, signInWithCustomToken,
-            getFirestore, doc, setDoc, onSnapshot, collection
+        // Konfigurasi Firebase asli milik Anda
+        const firebaseConfig = {
+            apiKey: "AIzaSyBo07LQ9Nt6vP-9VUwFaPtbsRNVBppjitQ",
+            authDomain: "edusenirupa5.firebaseapp.com",
+            projectId: "edusenirupa5",
+            storageBucket: "edusenirupa5.firebasestorage.app",
+            messagingSenderId: "792984693737",
+            appId: "1:792984693737:web:a0786adf8ccfe02ceef978",
+            measurementId: "G-399R2J145R"
         };
+
+        // Inisialisasi Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Expose Firebase tools & instances to global scope
+        window.firebaseModules = { 
+            signInAnonymously, doc, setDoc, onSnapshot, collection, query, orderBy 
+        window.firebaseInstances = { app, auth, db };
+        
         window.dispatchEvent(new Event('firebase-loaded'));
+        console.log("Firebase Terinisialisasi");
     </script>
     <style>
         body {
@@ -1504,64 +1509,82 @@
                 </div>
             `;
         }
+function initTeacherRealtimeListener() {
+    // 1. Ambil elemen tabel
+    const tbody = document.getElementById('student-table-body');
+    
+    // 2. Cek apakah Firestore sudah siap dari window scope
+    if (!window.firebaseInstances || !window.firebaseInstances.db) {
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-rose-500 font-bold">Firebase belum terhubung (Mode Offline).</td></tr>';
+        }
+        return;
+    }
 
-        function initTeacherRealtimeListener() {
-            if (!db) {
-                const tbody = document.getElementById('student-table-body');
-                if(tbody) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-rose-500 font-bold">Firebase belum terhubung (Mode Offline).</td></tr>`;
-                }
+    const db = window.firebaseInstances.db;
+    const { collection, onSnapshot, query, orderBy } = window.firebaseModules;
+
+    try {
+        // 3. Gunakan path koleksi flat 'progres_siswa' agar terhubung langsung ke game siswa
+        const studentsColRef = collection(db, 'progres_siswa');
+        const q = query(studentsColRef, orderBy('timestamp', 'desc'));
+
+        // 4. Jalankan pendengar realtime realtime (onSnapshot)
+        unsubscribeTeacher = onSnapshot(q, (snapshot) => {
+            if (!tbody) return;
+
+            if (snapshot.empty) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">Belum ada siswa yang masuk ke kuis.</td></tr>';
                 return;
             }
 
-            try {
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const { collection, onSnapshot } = window.firebaseModules;
-                const studentsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'student_progress');
+            let html = '';
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                
+                // Kalkulasi visual nyawa hati (❤️)
+                const currentLives = typeof data.lives !== 'undefined' ? data.lives : 3;
+                const livesStr = '❤️'.repeat(Math.max(0, currentLives)) + '🖤'.repeat(Math.max(0, 3 - currentLives));
+                
+                // Mengambil huruf pertama untuk avatar siswa
+                const initial = data.name ? data.name.charAt(0).toUpperCase() : 'S';
 
-                unsubscribeTeacher = onSnapshot(studentsColRef, (snapshot) => {
-                    const tbody = document.getElementById('student-table-body');
-                    if (!tbody) return;
+                html += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-4 font-bold text-slate-800 flex items-center space-x-2">
+                            <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-extrabold">${initial}</span>
+                            <span>${data.name || 'Tanpa Nama'}</span>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold ${data.status === 'Selesai Kuis' ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'}">
+                                ${data.status || 'Mengerjakan'}
+                            </span>
+                        </td>
+                        <td class="p-4 font-semibold text-slate-700">Soal ke-${(data.currentQuestion || 0) + 1} dari ${data.totalQuestions || 50}</td>
+                        <td class="p-4 text-rose-600 tracking-wider">${livesStr}</td>
+                        <td class="p-4 text-right font-extrabold text-indigo-700">${data.score || 0} Poin</td>
+                    </tr>
+                `;
+            });
 
-                    if (snapshot.empty) {
-                        tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">Belum ada siswa yang masuk ke kuis.</td></tr>`;
-                        return;
-                    }
-
-                    let html = '';
-                    snapshot.forEach(docSnap => {
-                        const data = docSnap.data();
-                        const livesStr = '❤️'.repeat(data.lives || 0) + '🖤'.repeat(3 - (data.lives || 0));
-                        html += `
-                            <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="p-4 font-bold text-slate-800 flex items-center space-x-2">
-                                    <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-extrabold">${(data.name || 'S').charAt(0).toUpperCase()}</span>
-                                    <span>${data.name || 'Tanpa Nama'}</span>
-                                </td>
-                                <td class="p-4">
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-bold ${data.status === 'Selesai Kuis' ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'}">
-                                        ${data.status || 'Mengerjakan'}
-                                    </span>
-                                </td>
-                                <td class="p-4 font-extrabold text-slate-700">Soal ke-${data.currentQuestion || 1} dari ${data.totalQuestions || 50}</td>
-                                <td class="p-4">${livesStr}</td>
-                                <td class="p-4 text-right font-extrabold text-indigo-700">${data.score || 0} Poin</td>
-                            </tr>
-                        `;
-                    });
-                    tbody.innerHTML = html;
-                }, (error) => {
-                    console.error("Firestore snapshot error:", error);
-                });
-            } catch (e) {
-                console.error("Error setting up teacher listener:", e);
+            tbody.innerHTML = html;
+            
+            // Perbarui UI indikator koneksi di panel atas menjadi Live Connected jika ada elemennya
+            const connectionBadge = document.querySelector('.bg-indigo-50 span');
+            if (connectionBadge && connectionBadge.textContent.includes('Offline')) {
+                connectionBadge.className = 'px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800';
+                connectionBadge.innerHTML = '● Live Connected';
             }
-        }
+        }, (error) => {
+            console.error("Firestore snapshot error:", error);
+        });
 
-        // Initialize App on Window Load
-        window.onload = function() {
-            render();
-        };
-    </script>
-</body>
-</html>
+    } catch (e) {
+        console.error("Error setting up teacher listener:", e);
+    }
+}
+
+// Initialize App on Window Load
+window.onload = function() {
+    render();
+};
