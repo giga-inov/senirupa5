@@ -1,1591 +1,612 @@
-<!-- Firebase SDKs -->
-<script type="module">
-    import { initializeApp } from "https://gstatic.com";
-    import { getAuth, signInAnonymously } from "https://gstatic.com";
-    import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy } from "https://gstatic.com";
-
-    // Konfigurasi Firebase asli milik Anda
-    const firebaseConfig = {
-        apiKey: "AIzaSyBo07LQ9Nt6vP-9VUwFaPtbsRNVBppjitQ",
-        authDomain: "://firebaseapp.com",
-        projectId: "edusenirupa5",
-        storageBucket: "edusenirupa5.firebasestorage.app",
-        messagingSenderId: "792984693737",
-        appId: "1:792984693737:web:a0786adf8ccfe02ceef978",
-        measurementId: "G-399R2J145R"
-    };
-
-    // Inisialisasi Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // Expose Firebase tools & instances to global scope
-    window.firebaseModules = {
-        signInAnonymously, doc, setDoc, onSnapshot, collection, query, orderBy
-    };
-    window.firebaseInstances = { app, auth, db };
-    
-    window.dispatchEvent(new Event('firebase-loaded'));
-    console.log("Firebase Berhasil Diinisialisasi");
-</script>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Seni Rupa Kelas 5 SD/MI</title>
+    <!-- Google Fonts & Tailwind CSS untuk Tampilan Modern -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            min-height: 100vh;
-        }
-        .art-card-shadow {
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
-        }
-        .pulse-slow {
-            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
-        .floating {
-            animation: float 3s ease-in-out infinite;
-        }
+        body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
+        .art-gradient { background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%); }
     </style>
-</head>
-<body class="text-slate-800 antialiased selection:bg-indigo-500 selection:text-white flex flex-col min-h-screen">
+    <!-- Firebase SDK v10 Modular -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, setDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    <div id="app" class="flex-grow flex flex-col max-w-5xl mx-auto w-full p-3 sm:p-6">
-        
-        <!-- HEADER APP BAR -->
-        <header class="bg-white/80 backdrop-blur-md rounded-2xl p-4 mb-4 art-card-shadow flex flex-wrap items-center justify-between border border-white/40 gap-3">
-            <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-xl flex items-center justify-center text-white text-2xl shadow-md floating">
-                    🎨
-                </div>
-                <div>
-                    <h1 class="text-lg sm:text-xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                        PETUALANGAN SENI RUPA
-                    </h1>
-                    <p class="text-xs text-slate-500 font-medium">Kelas 5 SD/MI Semester 1</p>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBo07LQ9Nt6vP-9VUwFaPtbsRNVBppjitQ",
+            authDomain: "edusenirupa5.firebaseapp.com",
+            projectId: "edusenirupa5",
+            storageBucket: "edusenirupa5.firebasestorage.app",
+            messagingSenderId: "792984693737",
+            appId: "1:792984693737:web:a0786adf8ccfe02ceef978",
+            measurementId: "G-399R2J145R"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.setDoc = setDoc;
+        window.doc = doc;
+        window.collection = collection;
+        window.onSnapshot = onSnapshot;
+        window.serverTimestamp = serverTimestamp;
+    </script>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-gray-800">
+
+    <!-- Tombol Mode Guru di Kanan Atas -->
+    <header class="w-full bg-white shadow-sm px-6 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <span class="text-2xl">🎨</span>
+            <span class="font-bold text-lg text-indigo-600">Giga Inovation</span>
+        </div>
+        <button onclick="bukaModalGuru()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">
+            🔒 Mode Guru
+        </button>
+    </header>
+
+    <!-- Konten Utama Game -->
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div id="game-container" class="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-6 md:p-8">
+            
+            <!-- 1. HALAMAN PEMBUKA -->
+            <div id="screen-welcome" class="text-center space-y-6">
+                <div class="text-6xl animate-bounce">🎨</div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900">PETUALANGAN SENI RUPA</h1>
+                <p class="text-gray-600 font-medium">Seni Rupa Kelas 5 SD/MI</p>
+                
+                <div class="space-y-3 max-w-sm mx-auto pt-4">
+                    <label class="block text-sm font-semibold text-gray-700">Masukkan Nama Kamu:</label>
+                    <input type="text" id="input-nama" placeholder="Nama lengkap siswa..." class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-center font-medium">
+                    <button onclick="mulaiPetualangan()" class="w-full art-gradient text-white font-bold py-3 rounded-xl shadow-md hover:opacity-95 transition">
+                        🎨 MULAI PETUALANGAN
+                    </button>
                 </div>
             </div>
-            
-            <div class="flex items-center space-x-3">
-                <div id="user-status-bar" class="hidden items-center space-x-3 bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100">
-                    <div class="flex items-center space-x-2">
-                        <span class="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow" id="nav-avatar">SN</span>
-                        <div>
-                            <div class="text-xs text-indigo-500 font-semibold uppercase tracking-wider">Seniman Muda</div>
-                            <div class="text-sm font-bold text-slate-700" id="nav-username">Siswa</div>
-                        </div>
+
+            <!-- 2. PETA PETUALANGAN & MENU -->
+            <div id="screen-map" class="hidden space-y-6">
+                <div class="flex justify-between items-center border-b pb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">Halo, <span id="display-nama" class="text-indigo-600"></span>!</h2>
+                        <p class="text-xs text-gray-500">Pilih level atau materi petualangan senimu:</p>
                     </div>
-                    <div class="h-6 w-[1px] bg-indigo-200 mx-1"></div>
-                    <div class="flex items-center space-x-2 text-rose-600 font-extrabold text-sm" id="nav-lives" title="Nyawa Tersisa">
-                        ❤️❤️❤️
-                    </div>
-                    <div class="h-6 w-[1px] bg-indigo-200 mx-1"></div>
                     <div class="text-right">
-                        <div class="text-xs text-indigo-500 font-semibold uppercase tracking-wider">Skor</div>
-                        <div class="text-sm font-extrabold text-indigo-700" id="nav-score">0 Poin</div>
+                        <span class="text-xs bg-red-100 text-red-600 font-bold px-3 py-1 rounded-full">Nyawa: <span id="display-nyawa">❤️❤️❤️</span></span>
                     </div>
                 </div>
 
-                <!-- Teacher Mode Button -->
-                <button onclick="openTeacherLoginModal()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs flex items-center space-x-1.5 shadow">
-                    <i class="fa-solid fa-chalkboard-user"></i>
-                    <span class="hidden sm:inline">Mode Guru</span>
+                <div class="grid grid-cols-1 gap-4">
+                    <button onclick="bukaMateri(1)" class="p-4 bg-indigo-50 border border-indigo-200 rounded-xl text-left hover:bg-indigo-100 transition flex items-center space-x-4">
+                        <span class="text-3xl">🖼️</span>
+                        <div>
+                            <h3 class="font-bold text-indigo-900">Level 1: Galeri Unsur & Prinsip</h3>
+                            <p class="text-xs text-indigo-600">Pelajari unsur dan prinsip seni rupa di sekitar kita.</p>
+                        </div>
+                    </button>
+                    <button onclick="bukaMateri(2)" class="p-4 bg-pink-50 border border-pink-200 rounded-xl text-left hover:bg-pink-100 transition flex items-center space-x-4">
+                        <span class="text-3xl">🌀</span>
+                        <div>
+                            <h3 class="font-bold text-pink-900">Level 2: Lembah Ritme & Pola</h3>
+                            <p class="text-xs text-pink-600">Mengeksplorasi ritme dan pengulangan bentuk di objek sekitar.</p>
+                        </div>
+                    </button>
+                    <button onclick="bukaMateri(3)" class="p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-left hover:bg-yellow-100 transition flex items-center space-x-4">
+                        <span class="text-3xl">✏️</span>
+                        <div>
+                            <h3 class="font-bold text-yellow-900">Level 3: Studio Proporsi & Komposisi</h3>
+                            <p class="text-xs text-yellow-600">Belajar ukuran objek dan penempatan bidang gambar.</p>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="mulaiKuis()" class="bg-green-600 text-white font-bold py-3 rounded-xl shadow hover:bg-green-700 transition">
+                        🚀 MULAI KUIS 50 SOAL
+                    </button>
+                    <button onclick="bukaMiniGame()" class="bg-purple-600 text-white font-bold py-3 rounded-xl shadow hover:bg-purple-700 transition">
+                        🎮 MINI GAME (TANGKEP KUAS)
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. HALAMAN MATERI -->
+            <div id="screen-materi" class="hidden space-y-4">
+                <h2 id="materi-judul" class="text-xl font-bold text-indigo-900 border-b pb-2"></h2>
+                <div id="materi-konten" class="text-sm text-gray-700 space-y-3 leading-relaxed max-h-64 overflow-y-auto pr-2"></div>
+                <button onclick="kembaliKePeta()" class="w-full bg-gray-200 text-gray-800 font-bold py-2 rounded-xl hover:bg-gray-300 transition">
+                    ↩ Kembali ke Peta
                 </button>
             </div>
-        </header>
 
-        <!-- MAIN DYNAMIC VIEW CONTAINER -->
-        <main id="main-view" class="flex-grow flex flex-col">
-            <!-- Rendered dynamically by JavaScript -->
-        </main>
+            <!-- 4. HALAMAN KUIS UTAMA -->
+            <div id="screen-kuis" class="hidden space-y-4">
+                <div class="flex justify-between items-center text-xs font-bold text-gray-500 border-b pb-2">
+                    <span id="label-nomor-soal">SOAL 1 DARI 50</span>
+                    <span class="text-red-500 text-base" id="kuis-nyawa">❤️❤️❤️</span>
+                    <span id="label-skor" class="text-indigo-600">Skor: 0</span>
+                </div>
 
-        <!-- FOOTER -->
-        <footer class="mt-8 text-center py-4 text-xs font-semibold text-slate-400 border-t border-slate-200">
-            Pengembang: Giga Inovation | 081329200985
-        </footer>
-    </div>
+                <div class="bg-indigo-50 p-4 rounded-xl min-h-[90px] flex items-center">
+                    <p id="teks-soal" class="font-semibold text-gray-900 text-base"></p>
+                </div>
 
-    <!-- TEACHER PIN MODAL -->
-    <div id="teacher-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full art-card-shadow border border-slate-100 text-center animate-scale-up">
-            <div class="w-16 h-16 bg-indigo-50 text-indigo-600 text-2xl rounded-2xl mx-auto flex items-center justify-center mb-4">🔐</div>
-            <h3 class="text-xl font-extrabold text-slate-800 mb-1">MODE GURU</h3>
-            <p class="text-xs text-slate-500 mb-6">Masukkan PIN keamanan guru untuk mengakses dasbor pemantauan real-time.</p>
+                <div id="container-opsi" class="space-y-2">
+                    <!-- Opsi jawaban dimasukkan via JavaScript -->
+                </div>
+
+                <div class="flex justify-between pt-2">
+                    <button onclick="bukaMateriDariKuis()" class="text-xs bg-gray-100 text-gray-700 px-3 py-2 rounded-lg font-semibold hover:bg-gray-200">
+                        📚 Baca Materi Kembali
+                    </button>
+                </div>
+            </div>
+
+            <!-- 5. MINI GAME INTERAKTIF ("TANGKEP KUAS") -->
+            <div id="screen-minigame" class="hidden text-center space-y-4">
+                <div class="flex justify-between items-center border-b pb-2">
+                    <h2 class="font-bold text-purple-700 text-lg">🎮 Tangkep Kuas Warna!</h2>
+                    <span id="mg-status" class="text-sm font-semibold">Waktu: 20s | Skor: <span id="mg-skor">0</span></span>
+                </div>
+                <p class="text-xs text-gray-500">Klik kuas warna sebanyak mungkin sebelum waktu habis! Hindari kuas hitam.</p>
+                
+                <div id="mg-arena" class="relative w-full h-64 bg-purple-50 rounded-xl border border-purple-200 overflow-hidden cursor-crosshair">
+                    <!-- Target muncul dinamis -->
+                </div>
+
+                <button onclick="mulaiMiniGameSistem()" id="btn-mulai-mg" class="w-full bg-purple-600 text-white font-bold py-2 rounded-xl hover:bg-purple-700">
+                    Mulai Permainan Mini
+                </button>
+                <button onclick="kembaliKePeta()" class="w-full bg-gray-200 text-gray-800 font-bold py-2 rounded-xl hover:bg-gray-300">
+                    Keluar Mini Game
+                </button>
+            </div>
+
+            <!-- 6. HALAMAN HASIL AKHIR & SERTIFIKAT -->
+            <div id="screen-hasil" class="hidden text-center space-y-6">
+                <div class="text-5xl">🏆</div>
+                <h2 class="text-2xl font-bold text-gray-900">PETUALANGAN SELESAI!</h2>
+                <p class="text-gray-600">Selamat, <span id="hasil-nama" class="font-bold text-indigo-600"></span>!</p>
+                
+                <div class="bg-gray-50 p-4 rounded-xl max-w-xs mx-auto space-y-2">
+                    <p class="text-sm">Total Skor: <b id="hasil-skor" class="text-indigo-600 text-lg">0</b> / 1000</p>
+                    <p class="text-sm">Predikat: <b id="hasil-kategori" class="text-green-600">-</b></p>
+                </div>
+
+                <div class="space-y-2">
+                    <button onclick="tampilkanSertifikat()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl shadow hover:bg-indigo-700">
+                        🏆 LIHAT SERTIFIKAT PENGHARGAAN
+                    </button>
+                    <button onclick="ulangiKuis()" class="w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-xl hover:bg-gray-300">
+                        🔄 ULANGI KUIS
+                    </button>
+                </div>
+            </div>
+
+            <!-- 7. MODAL SERTIFIKAT -->
+            <div id="modal-sertifikat" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div class="bg-white rounded-2xl p-6 max-w-lg w-full text-center border-4 border-indigo-500 space-y-4">
+                    <h3 class="text-xs tracking-widest uppercase text-indigo-500 font-bold">Sertifikat Penghargaan Resmi</h3>
+                    <h1 class="text-xl font-extrabold text-gray-800">PETUALANGAN SENI RUPA KELAS 5 SD/MI</h1>
+                    <p class="text-xs text-gray-500">Diberikan kepada:</p>
+                    <h2 id="sertifikat-nama" class="text-2xl font-bold text-indigo-600 underline">Nama Siswa</h2>
+                    <p class="text-xs text-gray-600">Atas keberhasilannya menuntaskan seluruh tantangan dan kuis seni rupa dengan perolehan skor <b id="sertifikat-skor">0</b>.</p>
+                    
+                    <div class="pt-4 border-t flex justify-between text-xs text-gray-500 font-medium">
+                        <span>Tanggal: <span id="sertifikat-tanggal"></span></span>
+                        <span>Giga Inovation (081329200985)</span>
+                    </div>
+                    <button onclick="tutupSertifikat()" class="mt-4 bg-gray-800 text-white text-xs px-4 py-2 rounded-lg font-bold">Tutup Sertifikat</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MODAL GURU -->
+    <div id="modal-guru" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-6 max-w-2xl w-full space-y-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="font-bold text-lg text-indigo-900">🔒 Mode Guru & Monitoring Realtime</h3>
+                <button onclick="tutupModalGuru()" class="text-gray-500 font-bold">✕</button>
+            </div>
             
-            <input type="password" id="teacher-pin-input" maxlength="6" placeholder="PIN (123456)" class="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 focus:border-indigo-600 rounded-2xl text-center text-lg font-bold tracking-widest text-slate-800 mb-4 focus:outline-none" onkeydown="if(event.key === 'Enter') verifyTeacherPin()">
-            
-            <div class="flex space-x-2">
-                <button onclick="closeTeacherLoginModal()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition-all">Batal</button>
-                <button onclick="verifyTeacherPin()" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition-all shadow-md">Masuk</button>
+            <div id="form-pin-guru" class="space-y-3">
+                <p class="text-xs text-gray-600">Masukkan PIN Guru standar (123456):</p>
+                <input type="password" id="input-pin" placeholder="PIN..." class="w-full px-3 py-2 border rounded-lg text-center font-bold">
+                <button onclick="cekPinGuru()" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold text-sm">Masuk Dashboard</button>
+            </div>
+
+            <div id="dashboard-guru" class="hidden space-y-3">
+                <p class="text-xs text-green-600 font-bold">✓ Terhubung Realtime dengan Database Firestore</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 border-b">
+                                <th class="p-2">Nama Siswa</th>
+                                <th class="p-2">Aktivitas</th>
+                                <th class="p-2">Posisi Soal</th>
+                                <th class="p-2">Nyawa</th>
+                                <th class="p-2">Skor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-monitoring-siswa">
+                            <tr><td colspan="5" class="p-4 text-center text-gray-400">Menunggu data siswa...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- CUSTOM MESSAGE BOX MODAL -->
-    <div id="custom-alert-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 max-w-sm w-full art-card-shadow border text-center">
-            <div id="alert-icon" class="text-4xl mb-3">⚠️</div>
-            <h4 id="alert-title" class="text-lg font-extrabold text-slate-800 mb-1">Pemberitahuan</h4>
-            <p id="alert-message" class="text-sm text-slate-600 mb-6">Pesan...</p>
-            <button onclick="closeCustomAlert()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm">Mengerti</button>
-        </div>
-    </div>
+    <!-- Footer Identitas Pengembang -->
+    <footer class="text-center py-4 text-xs text-gray-500 border-t bg-white">
+        Pengembang: Giga Inovation | 081329200985
+    </footer>
 
+    <!-- Logika Skrip Game & Firebase -->
     <script>
-        const gameState = {
-            currentScreen: 'welcome', // welcome, name-input, map, material-hub, chapter-1, chapter-2, chapter-3, quiz, result, certificate, minigame, teacher-dashboard
-            playerName: '',
-            studentId: '',
-            score: 0,
-            lives: 3,
-            currentQuestionIndex: 0,
-            userAnswers: {}, // questionIndex => selectedOption
-            shuffledQuizData: [],
-            quizStarted: false
+        let state = {
+            nama: "",
+            skor: 0,
+            nyawa: 3,
+            soalIndex: 0,
+            jawabanSiswa: {},
+            currentScreen: "welcome"
         };
 
-        // Firebase & Realtime Sync Setup
-        let db = null;
-        let auth = null;
-        let userId = null;
-        let unsubscribeTeacher = null;
+        // Bank 50 Soal Sesuai Materi Wajib Bab 1, 2, 3
+        const bankSoal = [
+            // BAB 1 (17 Soal)
+            {soal: "Unsur seni rupa yang terbentuk dari gabungan titik-titik disebut...", opsi: ["Garis", "Warna", "Tekstur", "Bidang"], jawaban: "Garis", bab: 1},
+            {soal: "Manakah yang termasuk unsur seni rupa dasar?", opsi: ["Garis, warna, dan bentuk", "Ritme dan irama", "Keseimbangan", "Proporsi"], jawaban: "Garis, warna, dan bentuk", bab: 1},
+            {soal: "Prinsip seni rupa yang menunjukkan keteraturan dan kesan bergerak disebut...", opsi: ["Ritme", "Komposisi", "Proporsi", "Keseimbangan"], jawaban: "Ritme", bab: 1},
+            {soal: "Warna dasar atau primer dalam seni rupa terdiri dari...", opsi: ["Merah, kuning, biru", "Hijau, ungu, oranye", "Hitam, putih, abu-abu", "Cokelat, emas, perak"], jawaban: "Merah, kuning, biru", bab: 1},
+            {soal: "Permukaan suatu benda yang terasa halus atau kasar ketika diraba disebut...", opsi: ["Tekstur", "Bentuk", "Ruang", "Garis"], jawaban: "Tekstur", bab: 1},
+            {soal: "Prinsip seni rupa yang menciptakan kesatuan antar unsur disebut...", opsi: ["Kesatuan (Unity)", "Kontras", "Proporsi", "Komposisi"], jawaban: "Kesatuan (Unity)", bab: 1},
+            {soal: "Contoh unsur seni rupa garis dapat kita temukan pada...", opsi: ["Senar gitar atau tepi buku", "Warna cat air", "Halusnya kapas", "Ruang kosong kelas"], jawaban: "Senar gitar atau tepi buku", bab: 1},
+            {soal: "Bentuk geometris dalam unsur seni rupa meliputi...", opsi: ["Persegi, lingkaran, segitiga", "Bentuk daun tidak beraturan", "Garis patah-patah", "Tekstur dinding"], jawaban: "Persegi, lingkaran, segitiga", bab: 1},
+            {soal: "Prinsip keseimbangan dalam karya seni rupa berfungsi agar...", opsi: ["Karya terlihat serasi dan tidak berat sebelah", "Warna menjadi sangat gelap", "Ukuran gambar menjadi kecil", "Garis menjadi hilang"], jawaban: "Karya terlihat serasi dan tidak berat sebelah", bab: 1},
+            {soal: "Unsur ruang dalam karya dua dimensi digambarkan melalui...", opsi: ["Kesan kedalaman dan perspektif", "Tekstur kain", "Jumlah garis", "Suara benda"], jawaban: "Kesan kedalaman dan perspektif", bab: 1},
+            {soal: "Penerapan prinsip kontras dalam seni rupa dapat dilihat dari...", opsi: ["Perbedaan warna terang dan gelap yang jelas", "Penggunaan satu warna saja", "Garis yang sama panjang", "Bentuk yang identik"], jawaban: "Perbedaan warna terang dan gelap yang jelas", bab: 1},
+            {soal: "Seni rupa yang ada di lingkungan sekitar rumah kita contohnya adalah...", opsi: ["Motif batik pada pakaian", "Lukisan di galeri luar negeri", "Patung purba", "Peta dunia"], jawaban: "Motif batik pada pakaian", bab: 1},
+            {soal: "Warna sekunder dihasilkan dari...", opsi: ["Pencampuran dua warna primer", "Pencampuran hitam dan putih", "Garis lurus", "Tekstur kasar"], jawaban: "Pencampuran dua warna primer", bab: 1},
+            {soal: "Garis lengkung pada karya seni biasanya memberikan kesan...", opsi: ["Luwes dan dinamis", "Kaku dan tegas", "Gelap dan suram", "Diam dan mati"], jawaban: "Luwes dan dinamis", bab: 1},
+            {soal: "Unsur seni rupa yang menunjukkan kegelapan atau terang suatu warna disebut...", opsi: ["Gelap terang (Value)", "Tekstur", "Ruang", "Titik"], jawaban: "Gelap terang (Value)", bab: 1},
+            {soal: "Prinsip dominasi (pusat perhatian) dalam karya seni bertujuan untuk...", opsi: ["Menarik perhatian penonton pada bagian tertentu", "Membuat bingung", "Menghapus warna", "Menyamakan seluruh objek"], jawaban: "Menarik perhatian penonton pada bagian tertentu", bab: 1},
+            {soal: "Mana yang merupakan objek seni rupa di alam sekitar?", opsi: ["Bunga dan daun di halaman", "Gedung bertingkat buatan pabrik", "Kertas HVS kosong", "Tinta printer"], jawaban: "Bunga dan daun di halaman", bab: 1},
 
-        window.addEventListener('firebase-loaded', async () => {
-            try {
-                const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, getFirestore } = window.firebaseModules;
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
+            // BAB 2 (16 Soal)
+            {soal: "Pengulangan unsur seni secara teratur dan berkesinambungan disebut...", opsi: ["Ritme", "Proporsi", "Komposisi", "Sketsa"], jawaban: "Ritme", bab: 2},
+            {soal: "Pola pengulangan bentuk dapat kita temukan pada...", opsi: ["Ubin lantai yang disusun rapi", "Coretan acak di dinding", "Awan di langit yang bebas", "Pohon tumbang"], jawaban: "Ubin lantai yang disusun rapi", bab: 2},
+            {soal: "Ritme dalam seni rupa paling mudah dikenali melalui...", opsi: ["Pengulangan bentuk, garis, atau warna", "Pewarnaan satu warna", "Ukuran kanvas", "Harga bahan"], jawaban: "Pengulangan bentuk, garis, atau warna", bab: 2},
+            {soal: "Contoh pola pengulangan garis di lingkungan sekitar adalah...", opsi: ["Pagar besi rumah yang berjeruji sama", "Batang pohon patah", "Genangan air hujan", "Tanah longsor"], jawaban: "Pagar besi rumah yang berjeruji sama", bab: 2},
+            {soal: "Pengulangan warna secara selang-seling pada motif kain tenun menciptakan...", opsi: ["Ritme visual yang menarik", "Kotornya kain", "Hilangnya corak", "Garis patah"], jawaban: "Ritme visual yang menarik", bab: 2},
+            {soal: "Ritme mengalir (flowing rhythm) biasanya ditandai dengan...", opsi: ["Garis melengkung yang bergelombang teratur", "Garis patah tajam", "Titik acak", "Warna hitam total"], jawaban: "Garis melengkung yang bergelombang teratur", bab: 2},
+            {soal: "Objek alam yang memiliki pola pengulangan bentuk (ritme) adalah...", opsi: ["Kelopak bunga matahari", "Batu kali tunggal", "Langit malam", "Seekor burung terbang"], jawaban: "Kelopak bunga matahari", bab: 2},
+            {soal: "Pola garis zig-zag yang diulang terus-menerus akan membentuk...", opsi: ["Ritme garis yang dinamis dan bersemangat", "Kesan tenang", "Ruang kosong", "Tekstur halus"], jawaban: "Ritme garis yang dinamis dan bersemangat", bab: 2},
+            {soal: "Mengapa ritme penting dalam sebuah karya seni dekoratif?", opsi: ["Agar karya terlihat harmonis dan berirama", "Agar cepat selesai", "Supaya warna luntur", "Agar gambar tidak terlihat"], jawaban: "Agar karya terlihat harmonis dan berirama", bab: 2},
+            {soal: "Motif batik sering menggunakan prinsip ritme berupa...", opsi: ["Pengulangan bentuk hias secara teratur", "Satu gambar tunggal besar", "Garis acak tanpa aturan", "Warna polos"], jawaban: "Pengulangan bentuk hias secara teratur", bab: 2},
+            {soal: "Ritme alternatif (selang-seling) contohnya adalah...", opsi: ["Merah, putih, merah, putih", "Merah semua", "Hitam, hitam, hitam", "Biru, hijau, kuning, ungu acak"], jawaban: "Merah, putih, merah, putih", bab: 2},
+            {soal: "Garisan pada penyeberangan jalan (zebra cross) menunjukkan contoh...", opsi: ["Ritme pengulangan garis sejajar", "Proporsi warna", "Komposisi acak", "Tekstur halus"], jawaban: "Ritme pengulangan garis sejajar", bab: 2},
+            {soal: "Bentuk gelombang air laut yang berulang di pasir pantai menunjukkan ritme...", opsi: ["Alamiah", "Buatan pabrik", "Matematis kaku", "Abstrak total"], jawaban: "Alamiah", bab: 2},
+            {soal: "Jika suatu pola bentuk diulang dengan ukuran yang semakin mengecil, maka tercipta ritme...", opsi: ["Progresif (gradasi ukuran)", "Statis kaku", "Acak", "Monoton"], jawaban: "Progresif (gradasi ukuran)", bab: 2},
+            {soal: "Manakah benda rumah tangga yang memiliki pola pengulangan warna?", opsi: ["Serbet dapur kotak-kotak", "Gelas bening polos", "Sendok stainless", "Piring putih"], jawaban: "Serbet dapur kotak-kotak", bab: 2},
+            {soal: "Mengenali ritme dalam objek sekitar melatih kemampuan kita dalam...", opsi: ["Melihat keteraturan dan keindahan visual", "Menghitung angka", "Berlari cepat", "Bernyanyi"], jawaban: "Melihat keteraturan dan keindahan visual", bab: 2},
 
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                userId = auth.currentUser?.uid || crypto.randomUUID();
-                gameState.studentId = userId;
-            } catch (e) {
-                console.warn("Firebase initialization offline fallback:", e);
-            }
-        });
-
-        function syncStudentProgressToFirebase() {
-            if (!db || !gameState.playerName) return;
-            try {
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                const { doc, setDoc } = window.firebaseModules;
-                const studentDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'student_progress', gameState.studentId);
-                
-                let correctCount = 0;
-                quizQuestions.forEach((q, idx) => {
-                    if (gameState.userAnswers[idx] === q.correct) correctCount++;
-                });
-
-                setDoc(studentDocRef, {
-                    studentId: gameState.studentId,
-                    name: gameState.playerName,
-                    score: gameState.score,
-                    lives: gameState.lives,
-                    currentQuestion: gameState.currentQuestionIndex + 1,
-                    totalQuestions: quizQuestions.length,
-                    correctAnswers: correctCount,
-                    status: gameState.currentScreen === 'result' ? 'Selesai Kuis' : 'Mengerjakan Kuis',
-                    lastUpdated: new Date().toISOString()
-                }, { merge: true });
-            } catch (err) {
-                console.error("Error syncing student progress:", err);
-            }
-        }
-
-        function showAlert(title, message, icon = '⚠️') {
-            document.getElementById('alert-title').textContent = title;
-            document.getElementById('alert-message').textContent = message;
-            document.getElementById('alert-icon').textContent = icon;
-            document.getElementById('custom-alert-modal').classList.remove('hidden');
-        }
-
-        function closeCustomAlert() {
-            document.getElementById('custom-alert-modal').classList.add('hidden');
-        }
-
-        // CHARACTER GUIDE DATA
-        const characterGuide = {
-            name: "Kika Si Kuas Ajaib",
-            avatar: "🖌️",
-            speak: function(text) {
-                if ('speechSynthesis' in window) {
-                    window.speechSynthesis.cancel();
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.lang = 'id-ID';
-                    utterance.rate = 1.0;
-                    window.speechSynthesis.speak(utterance);
-                }
-            }
-        };
-
-        const quizQuestions = [
-            // --- BAB 1: UNSUR DAN PRINSIP SENI RUPA DI SEKITAR KITA (17 Soal) ---
-            {
-                chapter: 1, level: 'Mudah',
-                question: "Unsur seni rupa dasar yang terbentuk dari gabungan titik-titik yang disambungkan adalah...",
-                image: "📈",
-                options: [{ key: 'A', text: 'Garis' }, { key: 'B', text: 'Warna' }, { key: 'C', text: 'Tekstur' }, { key: 'D', text: 'Ruang' }],
-                correct: 'A', explanation: 'Garis adalah unsur seni rupa yang terbentuk melalui goresan atau sambungan titik-titik.'
-            },
-            {
-                chapter: 1, level: 'Mudah',
-                question: "Perhatikan warna-warna berikut! Manakah yang termasuk ke dalam kelompok warna primer (pokok)?",
-                image: "🎨",
-                options: [{ key: 'A', text: 'Merah, Hijau, Biru' }, { key: 'B', text: 'Merah, Kuning, Biru' }, { key: 'C', text: 'Oranye, Ungu, Hijau' }, { key: 'D', text: 'Hitam, Putih, Abu-abu' }],
-                correct: 'B', explanation: 'Warna primer atau pokok dalam seni rupa adalah Merah, Kuning, dan Biru.'
-            },
-            {
-                chapter: 1, level: 'Mudah',
-                question: "Unsur seni rupa yang menunjukkan kesan permukaan suatu benda (halus, kasar, licin, atau bergelombang) disebut...",
-                image: "🪵",
-                options: [{ key: 'A', text: 'Bentuk' }, { key: 'B', text: 'Warna' }, { key: 'C', text: 'Tekstur' }, { key: 'D', text: 'Garis' }],
-                correct: 'C', explanation: 'Tekstur adalah nilai raba pada suatu permukaan benda, apakah terasa kasar, halus, licin, dll.'
-            },
-            {
-                chapter: 1, level: 'Sedang',
-                question: "Prinsip seni rupa yang menunjukkan keteraturan dan kesan bergerak karena adanya pengulangan unsur secara teratur disebut...",
-                image: "🌀",
-                options: [{ key: 'A', text: 'Kesatuan (Unity)' }, { key: 'B', text: 'Ritme (Rhythm)' }, { key: 'C', text: 'Kontras' }, { key: 'D', text: 'Proporsi' }],
-                correct: 'B', explanation: 'Ritme atau irama adalah prinsip seni rupa berupa pengulangan unsur secara teratur yang memberi kesan bergerak.'
-            },
-            {
-                chapter: 1, level: 'Mudah',
-                question: "Bentuk dasar dalam geometri yang memiliki tiga sisi dan tiga sudut dinamakan...",
-                image: "🔺",
-                options: [{ key: 'A', text: 'Persegi' }, { key: 'B', text: 'Lingkaran' }, { key: 'C', text: 'Segitiga' }, { key: 'D', text: 'Trapesium' }],
-                correct: 'C', explanation: 'Segitiga adalah bentuk geometris dasar yang memiliki 3 sisi dan 3 sudut.'
-            },
-            {
-                chapter: 1, level: 'Sedang',
-                question: "Prinsip seni rupa yang mengatur agar seluruh unsur dalam karya seni saling berpadu harmonis dan tidak saling bertabrakan maknanya adalah...",
-                image: "⚖️",
-                options: [{ key: 'A', text: 'Kesatuan (Unity)' }, { key: 'B', text: 'Keseimbangan (Balance)' }, { key: 'C', text: 'Proporsi' }, { key: 'D', text: 'Pusat Perhatian' }],
-                correct: 'A', explanation: 'Kesatuan (Unity) membuat seluruh bagian karya seni terikat erat dan padu.'
-            },
-            {
-                chapter: 1, level: 'Mudah',
-                question: "Manakah di bawah ini yang merupakan contoh benda di lingkungan sekitar yang memiliki unsur garis lengkung?",
-                image: "🌊",
-                options: [{ key: 'A', text: 'Ujung meja belajar yang siku' }, { key: 'B', text: 'Papan tulis persegi panjang' }, { key: 'C', text: 'Ombak laut atau pelangi di langit' }, { key: 'D', text: 'Ubin lantai berbentuk bujur sangkar' }],
-                correct: 'C', explanation: 'Pelangi dan ombak laut memiliki garis lengkung yang indah di lingkungan sekitar.'
-            },
-            {
-                chapter: 1, level: 'Menantang',
-                question: "Jika kita mencampurkan warna primer Merah dan Kuning dengan takaran yang pas, warna sekunder apa yang akan dihasilkan?",
-                image: "🟠",
-                options: [{ key: 'A', text: 'Hijau' }, { key: 'B', text: 'Ungu' }, { key: 'C', text: 'Oranye (Jingga)' }, { key: 'D', text: 'Cokelat' }],
-                correct: 'C', explanation: 'Pencampuran warna Merah dan Kuning menghasilkan warna sekunder Oranye atau Jingga.'
-            },
-            {
-                chapter: 1, level: 'Sedang',
-                question: "Unsur seni rupa yang tercipta dari ruang kosong atau ruang yang dibatasi oleh bentuk/garis disebut...",
-                image: "📦",
-                options: [{ key: 'A', text: 'Ruang / Volume' }, { key: 'B', text: 'Titik' }, { key: 'C', text: 'Warna' }, { key: 'D', text: 'Garis' }],
-                correct: 'A', explanation: 'Ruang atau volume menunjukkan dimensi nyata atau ilusi tiga dimensional pada objek seni.'
-            },
-            {
-                chapter: 1, level: 'Mudah',
-                question: "Prinsip seni rupa yang memberikan penekanan pada bagian tertentu agar menjadi pusat perhatian penonton disebut...",
-                image: "🎯",
-                options: [{ key: 'A', text: 'Pusat Perhatian (Emphasis)' }, { key: 'B', text: 'Ritme' }, { key: 'C', text: 'Proporsi' }, { key: 'D', text: 'Tekstur' }],
-                correct: 'A', explanation: 'Pusat perhatian (Emphasis) atau aksen menonjolkan bagian tertentu dalam karya seni.'
-            },
-            {
-                chapter: 1, level: 'Sedang',
-                question: "Kulit batang pohon atau permukaan batu kali apabila diraba terasa kasar. Dalam seni rupa, hal ini berkaitan dengan unsur...",
-                image: "🌳",
-                options: [{ key: 'A', text: 'Garis' }, { key: 'B', text: 'Tekstur' }, { key: 'C', text: 'Warna' }, { key: 'D', text: 'Bentuk' }],
-                correct: 'B', explanation: 'Permukaan kulit pohon yang kasar menunjukkan unsur tekstur nyata.'
-            },
-            {
-                chapter: 1, level: 'Menantang',
-                question: "Prinsip keseimbangan (Balance) dalam seni rupa terbagi menjadi dua jenis utama, yaitu...",
-                image: "⚖️",
-                options: [{ key: 'A', text: 'Simetris dan Asimetris' }, { key: 'B', text: 'Gelap dan Terang' }, { key: 'C', text: 'Primer dan Sekunder' }, { key: 'D', text: 'Vertikal dan Horizontal' }],
-                correct: 'A', explanation: 'Keseimbangan dalam seni rupa dikenal bersifat simetris (seimbang persis kiri-kanan) dan asimetris (seimbang secara visual meski berbeda bentuk).'
-            },
-            {
-                chapter: 1, level: 'Mudah',
-                question: "Garis yang melintang secara mendatar dari kiri ke kanan memberikan kesan tenang atau horisontal disebut garis...",
-                image: "📏",
-                options: [{ key: 'A', text: 'Garis Tegak (Vertikal)' }, { key: 'B', text: 'Garis Mendatar (Horizontal)' }, { key: 'C', text: 'Garis Zig-zag' }, { key: 'D', text: 'Garis Spiral' }],
-                correct: 'B', explanation: 'Garis mendatar disebut garis horizontal.'
-            },
-            {
-                chapter: 1, level: 'Sedang',
-                question: "Manakah unsur seni rupa yang paling mendasar dan menjadi awal dari segala bentuk goresan menggambar?",
-                image: "📍",
-                options: [{ key: 'A', text: 'Titik (Dot)' }, { key: 'B', text: 'Bidang' }, { key: 'C', text: 'Warna' }, { key: 'D', text: 'Gelap terang' }],
-                correct: 'A', explanation: 'Titik adalah unsur seni rupa paling dasar sebelum menjadi garis dan bidang.'
-            },
-            {
-                chapter: 1, level: 'Menantang',
-                question: "Penerapan prinsip kontras dalam seni rupa dapat dilihat ketika seorang seniman menempatkan...",
-                image: "🌓",
-                options: [{ key: 'A', text: 'Warna yang sama persis berdampingan' }, { key: 'B', text: 'Warna gelap berdampingan dengan warna terang secara mencolok' }, { key: 'C', text: 'Garis lurus secara terus menerus' }, { key: 'D', text: 'Objek yang ukurannya persis sama' }],
-                correct: 'B', explanation: 'Kontras memadukan unsur yang bertolak belakang, seperti warna gelap dan terang, agar terlihat menarik.'
-            },
-            {
-                chapter: 1, level: 'Mudah',
-                question: "Benda di sekitar kita seperti bola basket atau kelereng menerapkan unsur bentuk tiga dimensi yang dinamakan...",
-                image: "⚽",
-                options: [{ key: 'A', text: 'Kubus' }, { key: 'B', text: 'Balok' }, { key: 'C', text: 'Bola (Sphere)' }, { key: 'D', text: 'Prisma' }],
-                correct: 'C', explanation: 'Bola atau kelereng berbentuk bola (sphere).'
-            },
-            {
-                chapter: 1, level: 'Sedang',
-                question: "Mengapa penting bagi siswa kelas 5 untuk memahami unsur dan prinsip seni rupa di lingkungan sekitar?",
-                image: "💡",
-                options: [{ key: 'A', text: 'Agar bisa menjadi arsitek terkenal saja' }, { key: 'B', text: 'Agar dapat mengapresiasi keindahan alam ciptaan Tuhan dan menciptakan karya seni yang estetik' }, { key: 'C', text: 'Agar tidak perlu belajar matematika' }, { key: 'D', text: 'Agar bisa menjual lukisan dengan harga mahal' }],
-                correct: 'B', explanation: 'Pemahaman unsur dan prinsip seni membantu kita mengenali keindahan sekitar serta merancang karya yang harmonis.'
-            },
-
-            // --- BAB 2: MENGEKSPLORASI RITME DALAM OBJEK DI SEKITAR KITA (16 Soal) ---
-            {
-                chapter: 2, level: 'Mudah',
-                question: "Apakah arti dari ritme dalam karya seni rupa?",
-                image: "🌀",
-                options: [{ key: 'A', text: 'Kesan gerakan karena adanya pengulangan unsur seni secara teratur' }, { key: 'B', text: 'Bunyi alat musik saat menggambar' }, { key: 'C', text: 'Kecepatan tangan saat melukis' }, { key: 'D', text: 'Pewarnaan yang sangat gelap' }],
-                correct: 'A', explanation: 'Ritme dalam seni rupa adalah pengulangan unsur (garis, bentuk, warna) secara teratur yang menciptakan kesan bergerak.'
-            },
-            {
-                chapter: 2, level: 'Mudah',
-                question: "Contoh pola pengulangan bentuk pada motif batik tradisional dapat ditemukan pada...",
-                image: "👘",
-                options: [{ key: 'A', text: 'Garis pantai yang acak' }, { key: 'B', text: 'Susunan daun pakis atau motif kawung yang berulang rapi' }, { key: 'C', text: 'Awan berarak di langit sore' }, { key: 'D', text: 'Genangan air hujan di jalan' }],
-                correct: 'B', explanation: 'Motif batik seperti kawung menampakkan pengulangan bentuk geometris secara teratur.'
-            },
-            {
-                chapter: 2, level: 'Sedang',
-                question: "Perhatikan pola garis berikut: Vertikal, Horizontal, Vertikal, Horizontal. Pola ini menunjukkan ritme pengulangan...",
-                image: "📊",
-                options: [{ key: 'A', text: 'Garis' }, { key: 'B', text: 'Warna' }, { key: 'C', text: 'Tekstur kasar' }, { key: 'D', text: 'Ruang hampa' }],
-                correct: 'A', explanation: 'Pengulangan bentuk garis secara bergantian membentuk ritme garis yang ritmis.'
-            },
-            {
-                chapter: 2, level: 'Mudah',
-                question: "Benda di sekitar kita yang memiliki susunan ubin lantai atau pagar besi berjeruji merupakan contoh penerapan...",
-                image: "🧱",
-                options: [{ key: 'A', text: 'Pengulangan pola dan ritme' }, { key: 'B', text: 'Warna primer tunggal' }, { key: 'C', text: 'Proporsi tubuh manusia' }, { key: 'D', text: 'Komposisi asimetris bebas' }],
-                correct: 'A', explanation: 'Pagar besi atau ubin lantai disusun berulang-ulang, menunjukkan prinsip ritme dan pola.'
-            },
-            {
-                chapter: 2, level: 'Sedang',
-                question: "Manakah jenis ritme dalam seni rupa yang menunjukkan pengulangan unsur dengan jarak dan bentuk yang sama persis?",
-                image: "🔄",
-                options: [{ key: 'A', text: 'Ritme Mengalir (Flowing)' }, { key: 'B', text: 'Ritme Beraturan (Regular)' }, { key: 'C', text: 'Ritme Acak (Random)' }, { key: 'D', text: 'Ritme Kontras' }],
-                correct: 'B', explanation: 'Ritme beraturan (regular) terjadi ketika motif atau unsur diulang dengan interval dan ukuran yang sama.'
-            },
-            {
-                chapter: 2, level: 'Menantang',
-                question: "Jika kita melihat susunan kelopak bunga matahari atau gelombang air yang melingkar keluar, ritme jenis apa yang terbentuk?",
-                image: "🌻",
-                options: [{ key: 'A', text: 'Ritme Alternatif (Bergantian)' }, { key: 'B', text: 'Ritme Progresif / Memusat (Radiating / Progressive)' }, { key: 'C', text: 'Ritme Kaku' }, { key: 'D', text: 'Ritme Monoton' }],
-                correct: 'B', explanation: 'Kelopak bunga atau riak air melingkar menunjukkan ritme progresif/radiating (menyebar/memusat).'
-            },
-            {
-                chapter: 2, level: 'Mudah',
-                question: "Pengulangan warna merah, kuning, merah, kuning secara berselang-seling pada hiasan dinding mencerminkan ritme...",
-                image: "🎨",
-                options: [{ key: 'A', text: 'Pengulangan Warna' }, { key: 'B', text: 'Pengulangan Titik' }, { key: 'C', text: 'Proporsi Gambar' }, { key: 'D', text: 'Komposisi Pusat' }],
-                correct: 'A', explanation: 'Warna yang diulang secara teratur membentuk ritme pengulangan warna.'
-            },
-            {
-                chapter: 2, level: 'Sedang',
-                question: "Di alam bebas, urutan sisik ikan, susunan bulu burung, atau belang pada tubuh zebra adalah contoh nyata dari...",
-                image: "🦓",
-                options: [{ key: 'A', text: 'Ritme dan pola alami' }, { key: 'B', text: 'Kesalahan proporsi' }, { key: 'C', text: 'Komposisi abstrak' }, { key: 'D', text: 'Tekstur buatan manusia' }],
-                correct: 'A', explanation: 'Alam semesta kaya akan ritme dan pola alami pada hewan dan tumbuhan.'
-            },
-            {
-                chapter: 2, level: 'Mudah',
-                question: "Bagaimanakah cara mengenali ritme pada sebuah objek karya seni?",
-                image: "🔍",
-                options: [{ key: 'A', text: 'Melihat ada tidaknya bentuk atau garis yang diulang secara berirama' }, { key: 'B', text: 'Mencium aroma cat lukisannya' }, { key: 'C', text: 'Menimbang berat kertas gambar' }, { key: 'D', text: 'Mendengarkan suara lagu di dekatnya' }],
-                correct: 'A', explanation: 'Ritme dikenali melalui pengamatan visual terhadap unsur yang berulang secara teratur.'
-            },
-            {
-                chapter: 2, level: 'Menantang',
-                question: "Apa fungsi utama penerapan ritme dalam sebuah karya seni rupa?",
-                image: "✨",
-                options: [{ key: 'A', text: 'Membuat karya terlihat membosankan' }, { key: 'B', text: 'Memberikan keindahan visual, keselarasan, dan menghilangkan kesan monoton' }, { key: 'C', text: 'Menambah berat bingkai gambar' }, { key: 'D', text: 'Menghabiskan banyak warna cat' }],
-                correct: 'B', explanation: 'Ritme memberikan dinamika, keindahan, dan harmoni sehingga karya seni tidak terasa kaku atau monoton.'
-            },
-            {
-                chapter: 2, level: 'Sedang',
-                question: "Pola pengulangan bentuk geometris lingkaran kecil dan lingkaran besar secara bergantian disebut ritme...",
-                image: "⭕",
-                options: [{ key: 'A', text: 'Alternatif (Bergantian)' }, { key: 'B', text: 'Acak' }, { key: 'C', text: 'Tunggal' }, { key: 'D', text: 'Asimetris' }],
-                correct: 'A', explanation: 'Pengulangan dua bentuk berbeda secara bergantian disebut ritme alternatif.'
-            },
-            {
-                chapter: 2, level: 'Mudah',
-                question: "Garis gelombang yang diukir berulang-ulang pada tepian piring keramik membentuk pola...",
-                image: "🍽️",
-                options: [{ key: 'A', text: 'Pola ukiran ritmis' }, { key: 'B', text: 'Pola acak tidak beraturan' }, { key: 'C', text: 'Pola titik buta' }, { key: 'D', text: 'Pola warna primer' }],
-                correct: 'A', explanation: 'Ukiran tepian piring yang berulang membentuk pola ukiran ritmis.'
-            },
-            {
-                chapter: 2, level: 'Sedang',
-                question: "Manakah objek di lingkungan sekitar sekolah yang sering menunjukkan pola garis tegak lurus berulang?",
-                image: "🏫",
-                options: [{ key: 'A', text: 'Jeruji jendela kelas atau tiang-tiang koridor sekolah' }, { key: 'B', text: 'Awan mendung di atas sekolah' }, { key: 'C', text: 'Genangan air di halaman' }, { key: 'D', text: 'Daun-daun kering berserakan' }],
-                correct: 'A', explanation: 'Jeruji jendela atau tiang koridor tersusun berjajar rapi menunjukkan ritme vertikal.'
-            },
-            {
-                chapter: 2, level: 'Menantang',
-                question: "Perbedaan utama antara pola biasa dan ritme dalam seni rupa adalah...",
-                image: "📐",
-                options: [{ key: 'A', text: 'Pola adalah bentuk susunannya, sedangkan ritme memberikan kesan dinamika dan gerak berulang' }, { key: 'B', text: 'Tidak ada bedanya sama sekali' }, { key: 'C', text: 'Pola hanya untuk matematika, ritme untuk menyanyi' }, { key: 'D', text: 'Ritme selalu berwarna hitam putih' }],
-                correct: 'A', explanation: 'Pola adalah bentuk susunan motifnya, sementara ritme menghidupkan pola tersebut sehingga berasa mengalir dan dinamis.'
-            },
-            {
-                chapter: 2, level: 'Mudah',
-                question: "Jika kita menggambar pagar rumah dengan tiang kayu berukuran sama yang berderet rapi, prinsip seni rupa apa yang kita terapkan?",
-                image: "🏡",
-                options: [{ key: 'A', text: 'Ritme dan Pola' }, { key: 'B', text: 'Warna kontras gelap' }, { key: 'C', text: 'Bentuk abstrak' }, { key: 'D', text: 'Ketidakseimbangan' }],
-                correct: 'A', explanation: 'Pagar berderet rapi adalah contoh nyata penerapan ritme dan pola.'
-            },
-            {
-                chapter: 2, level: 'Sedang',
-                question: "Bagaimanakah wujud ritme mengalir (flowing rhythm) pada objek alam?",
-                image: "🍃",
-                options: [{ key: 'A', text: 'Seperti bentuk aliran air sungai yang berkelok-kelok atau urat daun yang melengkung lembut' }, { key: 'B', text: 'Seperti kotak-kotak ubin yang kaku' }, { key: 'C', text: 'Seperti titik-titik kaku' }, { key: 'D', text: 'Seperti garis lurus vertikal tegak' }],
-                correct: 'A', explanation: 'Ritme mengalir tampak pada garis lengkung yang lembut seperti ombak, sungai, atau urat daun.'
-            },
-
-            // --- BAB 3: MENGGAMBAR OBJEK DENGAN PROPORSI DAN KOMPOSISI (17 Soal) ---
-            {
-                chapter: 3, level: 'Mudah',
-                question: "Apakah arti dari proporsi dalam kegiatan menggambar objek?",
-                image: "📐",
-                options: [{ key: 'A', text: 'Kesesuaian ukuran dan perbandingan antara bagian objek satu dengan bagian lainnya' }, { key: 'B', text: 'Harga pensil yang digunakan' }, { key: 'C', text: 'Jumlah warna cat yang dipakai' }, { key: 'D', text: 'Kecepatan menggambar' }],
-                correct: 'A', explanation: 'Proporsi adalah perbandingan ukuran yang ideal dan harmonis antara bagian objek dalam gambar.'
-            },
-            {
-                chapter: 3, level: 'Mudah',
-                question: "Apakah arti dari komposisi dalam karya gambar?",
-                image: "🖼️",
-                options: [{ key: 'A', text: 'Cara menyusun dan menempatkan objek pada bidang gambar agar tampak seimbang dan menarik' }, { key: 'B', text: 'Cara meraut pensil warna' }, { key: 'C', text: 'Jenis kertas gambar tebal' }, { key: 'D', text: 'Judul lukisan terkenal' }],
-                correct: 'A', explanation: 'Komposisi adalah susunan atau penempatan objek gambar dalam bidang agar enak dipandang.'
-            },
-            {
-                chapter: 3, level: 'Sedang',
-                question: "Jika kamu menggambar sebuah vas bunga dan bunga di dalamnya, vas bunga digambar terlalu kecil sedangkan bunganya raksasa, maka gambar tersebut melanggar prinsip...",
-                image: "🏺",
-                options: [{ key: 'A', text: 'Proporsi' }, { key: 'B', text: 'Warna primer' }, { key: 'C', text: 'Garis horizontal' }, { key: 'D', text: 'Ritme warna' }],
-                correct: 'A', explanation: 'Ukuran vas dan bunga yang tidak seimbang menunjukkan kesalahan dalam proporsi.'
-            },
-            {
-                chapter: 3, level: 'Mudah',
-                question: "Manakah susunan komposisi penempatan objek gambar yang diletakkan persis di tengah bidang gambar dengan seimbang disebut komposisi...",
-                image: "⚖️",
-                options: [{ key: 'A', text: 'Komposisi Simetris (Sentral)' }, { key: 'B', text: 'Komposisi Acak' }, { key: 'C', text: 'Komposisi Rusak' }, { key: 'D', text: 'Komposisi Abstrak' }],
-                correct: 'A', explanation: 'Komposisi simetris menempatkan objek secara seimbang di bagian tengah atau membagi dua sisi sama.'
-            },
-            {
-                chapter: 3, level: 'Sedang',
-                question: "Dalam menggambar benda mati (still life) seperti buah-buahan di atas meja, hal apa yang perlu diperhatikan agar komposisinya menarik?",
-                image: "🍎",
-                options: [{ key: 'A', text: 'Penataan letak objek (tidak menumpuk di satu sisi saja) serta variasi ukuran' }, { key: 'B', text: 'Menggunakan kertas berwarna hitam legam' }, { key: 'C', text: 'Menggambar tanpa melihat objek' }, { key: 'D', text: 'Membuat seluruh buah berukuran sama persis' }],
-                correct: 'A', explanation: 'Komposisi buah di atas meja yang baik memperhatikan keseimbangan letak dan variasi ukuran.'
-            },
-            {
-                chapter: 3, level: 'Menantang',
-                question: "Apa yang dimaksud dengan komposisi asimetris dalam menggambar?",
-                image: "🎨",
-                options: [{ key: 'A', text: 'Objek diletakkan tidak persis sama di kiri dan kanan, namun tetap menciptakan keseimbangan visual yang harmonis' }, { key: 'B', text: 'Objek digambar berantakan tanpa aturan' }, { key: 'C', text: 'Hanya menggambar satu garis' }, { key: 'D', text: 'Menggunakan satu warna saja' }],
-                correct: 'A', explanation: 'Komposisi asimetris menata objek secara berbeda di sisi kiri dan kanan tetapi tetap seimbang secara visual.'
-            },
-            {
-                chapter: 3, level: 'Mudah',
-                question: "Alat bantu manakah yang paling sering digunakan untuk mengukur perbandingan ukuran dan garis bantu proporsi saat menggambar?",
-                image: "📏",
-                options: [{ key: 'A', text: 'Penggaris dan pensil' }, { key: 'B', text: 'Gunting kertas' }, { key: 'C', text: 'Lem kertas' }, { key: 'D', text: 'Kuas lukis besar' }],
-                correct: 'A', explanation: 'Penggaris dan pensil membantu membuat sketsa proporsional.'
-            },
-            {
-                chapter: 3, level: 'Sedang',
-                question: "Ketika menggambar pemandangan alam, objek gunung yang jauh digambarkan lebih kecil daripada pohon di dekat kita. Hal ini menerapkan prinsip...",
-                image: "⛰️",
-                options: [{ key: 'A', text: 'Proporsi dan perspektif ukuran jarak' }, { key: 'B', text: 'Warna sekunder' }, { key: 'C', text: 'Ritme garis vertikal' }, { key: 'D', text: 'Tekstur kasar' }],
-                correct: 'A', explanation: 'Ukuran objek disesuaikan dengan jaraknya (jauh tampak lebih kecil) agar proporsional.'
-            },
-            {
-                chapter: 3, level: 'Mudah',
-                question: "Mengapa penting mengatur komposisi sebelum mulai mewarnai gambar?",
-                image: "🎯",
-                options: [{ key: 'A', text: 'Agar penempatan objek pas di tengah kertas dan tidak ada bagian yang kosong sebelah' }, { key: 'B', text: 'Agar pensil tidak patah' }, { key: 'C', text: 'Agar kertas menjadi wangi' }, { key: 'D', text: 'Agar cepat selesai' }],
-                correct: 'A', explanation: 'Pengaturan komposisi memastikan gambar tertata rapi di bidang gambar.'
-            },
-            {
-                chapter: 3, level: 'Menantang',
-                question: "Dalam menggambar bentuk tubuh manusia atau hewan, seniman menggunakan perbandingan kepala sebagai patokan ukuran tubuh ideal. Ini disebut...",
-                image: "👤",
-                options: [{ key: 'A', text: 'Proporsi anatomi tubuh' }, { key: 'B', text: 'Komposisi warna' }, { key: 'C', text: 'Ritme pola batik' }, { key: 'D', text: 'Tekstur kayu' }],
-                correct: 'A', explanation: 'Proporsi anatomi mengatur perbandingan ukuran bagian tubuh (seperti kepala dan badan) agar realistis.'
-            },
-            {
-                chapter: 3, level: 'Sedang',
-                question: "Manakah contoh penataan komposisi objek yang membentuk susunan segitiga (pyramid composition) dalam menggambar sekumpulan benda?",
-                image: "🔺",
-                options: [{ key: 'A', text: 'Objek utama yang besar di tengah bawah, didukung objek kecil di sisi kiri dan kanan bawah' }, { key: 'B', text: 'Semua objek berbaris satu garis lurus di atas' }, { key: 'C', text: 'Objek diletakkan di luar kertas' }, { key: 'D', text: 'Objek saling bertumpuk tanpa bentuk' }],
-                correct: 'A', explanation: 'Susunan berbentuk segitiga adalah salah satu komposisi klasik yang sangat stabil dan menarik.'
-            },
-            {
-                chapter: 3, level: 'Mudah',
-                question: "Apa akibatnya jika kita menggambar objek terlalu besar hingga keluar dari garis tepi buku gambar?",
-                image: "📝",
-                options: [{ key: 'A', text: 'Komposisi gambar menjadi tidak pas dan terpotong' }, { key: 'B', text: 'Gambar menjadi sangat indah' }, { key: 'C', text: 'Warna cat menjadi lebih cerah' }, { key: 'D', text: 'Kertas menjadi lebih tebal' }],
-                correct: 'A', explanation: 'Objek yang terlalu besar akan membuat komposisi terpotong dan kurang seimbang.'
-            },
-            {
-                chapter: 3, level: 'Sedang',
-                question: "Bagaimanakah cara melatih kemampuan proporsi dan komposisi bagi siswa kelas 5?",
-                image: "✏️",
-                options: [{ key: 'A', text: 'Sering berlatih membuat sketsa benda nyata di sekitar (seperti botol, cangkir, atau buah) secara teliti' }, { key: 'B', text: 'Hanya melihat gambar di internet' }, { key: 'C', text: 'Membeli buku mahal' }, { key: 'D', text: 'Membuang pensil lama' }],
-                correct: 'A', explanation: 'Latihan rutin membuat sketsa langsung dari objek nyata meningkatkan kepekaan proporsi dan komposisi.'
-            },
-            {
-                chapter: 3, level: 'Menantang',
-                question: "Dalam prinsip komposisi, apa yang dimaksud dengan 'Center of Interest' (Pusat Perhatian)?",
-                image: "🌟",
-                options: [{ key: 'A', text: 'Bagian utama gambar yang paling menarik perhatian pertama kali saat orang melihat karya kita' }, { key: 'B', text: 'Tanda tangan pembuat gambar di sudut bawah' }, { key: 'C', text: 'Warna latar belakang yang paling gelap' }, { key: 'D', text: 'Garis tepi kertas gambar' }],
-                correct: 'A', explanation: 'Center of interest adalah titik fokus utama dalam komposisi gambar.'
-            },
-            {
-                chapter: 3, level: 'Mudah',
-                question: "Sebelum mewarnai sketsa gambar agar proporsinya benar, langkah awal yang harus dilakukan adalah...",
-                image: "✏️",
-                options: [{ key: 'A', text: 'Membuat sketsa tipis dengan pensil dan mengatur letak objek' }, { key: 'B', text: 'Langsung menumpahkan cat air' }, { key: 'C', text: 'Menulis nama di semua sudut' }, { key: 'D', text: 'Menutup buku gambar' }],
-                correct: 'A', explanation: 'Sketsa tipis dengan pensil memudahkan kita mengoreksi proporsi dan komposisi sebelum diwarnai.'
-            },
-            {
-                chapter: 3, level: 'Sedang',
-                question: "Manakah bentuk komposisi yang memberikan kesan tenang, formal, dan seimbang mutlak?",
-                image: "⚖️",
-                options: [{ key: 'A', text: 'Komposisi Simetris' }, { key: 'B', text: 'Komposisi Acak Bebas' }, { key: 'C', text: 'Komposisi Berantakan' }, { key: 'D', text: 'Komposisi Miring' }],
-                correct: 'A', explanation: 'Komposisi simetris memberikan kesan formal, teratur, dan seimbang.'
-            },
-            {
-                chapter: 3, level: 'Menantang',
-                question: "Penerapan proporsi dan komposisi yang baik dalam kehidupan sehari-hari dapat kita jumpai saat seseorang menata...",
-                image: "🛋️",
-                options: [{ key: 'A', text: 'Tata letak perabotan ruang tamu atau dekorasi panggung agar nyaman dilihat dan seimbang' }, { key: 'B', text: 'Sepatu di halaman secara asal' }, { key: 'C', text: 'Buku di lantai sembarangan' }, { key: 'D', text: 'Sampah di tempat sampah' }],
-                correct: 'A', explanation: 'Menata interior ruangan atau perabotan menerapkan prinsip proporsi dan komposisi ruang.'
-            }
+            // BAB 3 (17 Soal)
+            {soal: "Kesesuaian ukuran antara bagian objek satu dengan bagian lainnya disebut...", opsi: ["Proporsi", "Komposisi", "Ritme", "Warna"], jawaban: "Proporsi", bab: 3},
+            {soal: "Pengaturan tata letak objek dalam bidang gambar agar menarik disebut...", opsi: ["Komposisi", "Proporsi", "Tekstur", "Garis"], jawaban: "Komposisi", bab: 3},
+            {soal: "Jika menggambar orang dengan kepala terlalu besar dan badan terlalu kecil, maka gambar tersebut...", opsi: ["Tidak proporsional", "Sangat proporsional", "Memiliki komposisi sempurna", "Indah sekali"], jawaban: "Tidak proporsional", bab: 3},
+            {soal: "Komposisi simetris dalam menggambar berarti...", opsi: ["Susunan objek seimbang antara sisi kiri dan kanan", "Objek berkumpul di satu sudut saja", "Objek tidak beraturan", "Ukuran objek sangat kecil"], jawaban: "Susunan objek seimbang antara sisi kiri dan kanan", bab: 3},
+            {soal: "Komposisi asimetris menunjukkan penempatan objek yang...", opsi: ["Tidak sama persis bentuknya tetapi tetap seimbang", "Sama persis kiri kanan", "Hanya di tengah saja", "Sangat berantakan"], jawaban: "Tidak sama persis bentuknya tetapi tetap seimbang", bab: 3},
+            {soal: "Hubungan ukuran antara gelas dan kendi di atas meja dalam menggambar diatur oleh...", opsi: ["Proporsi", "Warna primer", "Ritme garis", "Jumlah titik"], jawaban: "Proporsi", bab: 3},
+            {soal: "Tujuan utama mengatur komposisi dalam karya gambar adalah...", opsi: ["Agar gambar enak dipandang dan tidak membosankan", "Agar kertas cepat habis", "Supaya pensil patah", "Agar warna tercampur"], jawaban: "Agar enak dipandang dan tidak membosankan", bab: 3},
+            {soal: "Dalam menggambar pemandangan alam, objek gunung diletakkan di bagian...", opsi: ["Latar belakang (background)", "Pojok bawah depan", "Samping kiri luar kertas", "Tengah menutupi semua"], jawaban: "Latar belakang (background)", bab: 3},
+            {soal: "Contoh penerapan proporsi yang salah dalam kehidupan sehari-hari adalah...", opsi: ["Rumah berukuran raksasa dengan pintu kecil seukuran jari", "Kursi tinggi disesuaikan meja belajar", "Buku tulis pas di tas", "Sepatu sesuai ukuran kaki"], jawaban: "Rumah berukuran raksasa dengan pintu kecil seukuran jari", bab: 3},
+            {soal: "Penempatan objek utama (focal point) sebaiknya berada di...", opsi: ["Area yang menarik perhatian atau mendekati pusat bidang", "Sudut tersembunyi bawah", "Di luar garis kertas", "Bagian yang paling gelap saja"], jawaban: "Area yang menarik perhatian atau mendekati pusat bidang", bab: 3},
+            {soal: "Saat menggambar buah apel dan semangka di atas piring, ukuran buah semangka seharusnya...", opsi: ["Lebih besar daripada buah apel", "Lebih kecil daripada buah apel", "Sama persis dengan apel", "Berbentuk kotak"], jawaban: "Lebih besar daripada buah apel", bab: 3},
+            {soal: "Komposisi sentral memusatkan perhatian penonton pada objek yang berada di...", opsi: ["Tengah bidang gambar", "Pojok kanan", "Tepi kertas", "Luar bingkai"], jawaban: "Tengah bidang gambar", bab: 3},
+            {soal: "Mengapa kita memerlukan sketsa awal sebelum menentukan komposisi akhir?", opsi: ["Agar posisi objek dapat diatur dengan pas", "Agar cat cepat kering", "Supaya gambar tidak berwarna", "Agar kertas kotor"], jawaban: "Agar posisi objek dapat diatur dengan pas", bab: 3},
+            {soal: "Keseimbangan dalam komposisi asimetris sering memberikan kesan...", opsi: ["Dinamis dan tidak kaku", "Mati dan membosankan", "Sangat formal", "Gelap gulita"], jawaban: "Dinamis dan tidak kaku", bab: 3},
+            {soal: "Ukuran tubuh manusia dewasa dibandingkan dengan anak kecil menunjukkan prinsip...", opsi: ["Proporsi", "Ritme", "Garis lurus", "Warna sekunder"], jawaban: "Proporsi", bab: 3},
+            {soal: "Penataan benda-benda hias di ruang tamu agar terlihat rapi dan indah adalah penerapan dari...", opsi: ["Komposisi", "Proporsi warna tunggal", "Ritme suara", "Unsur titik"], jawaban: "Komposisi", bab: 3},
+            {soal: "Sebelum mewarnai gambar benda, hal utama yang diperhatikan agar proporsinya tepat adalah...", opsi: ["Membuat perbandingan ukuran kerangka dasar", "Langsung menebalkan spidol hitam", "Menghapus semua garis", "Melipat kertas jadi dua"], jawaban: "Membuat perbandingan ukuran kerangka dasar", bab: 3}
         ];
 
-        // Fisher-Yates shuffle helper to randomize options so correct answer isn't always A
-        function shuffleArray(array) {
-            let arr = [...array];
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr;
-        }
+        let kuisAktifSoal = [];
+        let currentSoalObj = null;
 
-        function prepareShuffledQuiz() {
-            gameState.shuffledQuizData = quizQuestions.map(q => {
-                const shuffledOpts = shuffleArray(q.options);
-                return {
-                    ...q,
-                    options: shuffledOpts
-                };
+        // Navigasi Layar
+        function gantiLayar(idLayar) {
+            ['welcome', 'map', 'materi', 'kuis', 'minigame', 'hasil'].forEach(s => {
+                document.getElementById(`screen-${s}`).classList.add('hidden');
             });
+            document.getElementById(`screen-${idLayar}`).classList.remove('hidden');
+            state.currentScreen = idLayar;
         }
 
-        function navigateTo(screenId) {
-            // Unsubscribe teacher realtime listener if leaving dashboard
-            if (gameState.currentScreen === 'teacher-dashboard' && screenId !== 'teacher-dashboard') {
-                if (unsubscribeTeacher) {
-                    unsubscribeTeacher();
-                    unsubscribeTeacher = null;
-                }
-            }
-
-            gameState.currentScreen = screenId;
-            render();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function updateStatusBar() {
-            const statusBar = document.getElementById('user-status-bar');
-            const navUsername = document.getElementById('nav-username');
-            const navScore = document.getElementById('nav-score');
-            const navAvatar = document.getElementById('nav-avatar');
-            const navLives = document.getElementById('nav-lives');
-
-            if (gameState.playerName && gameState.currentScreen !== 'teacher-dashboard') {
-                statusBar.classList.remove('hidden');
-                statusBar.classList.add('flex');
-                navUsername.textContent = gameState.playerName;
-                navScore.textContent = `${gameState.score} Poin`;
-                navAvatar.textContent = gameState.playerName.charAt(0).toUpperCase();
-                
-                let hearts = '';
-                for(let i=0; i<3; i++) {
-                    hearts += i < gameState.lives ? '❤️' : '🖤';
-                }
-                navLives.textContent = hearts;
-            } else {
-                statusBar.classList.add('hidden');
-                statusBar.classList.remove('flex');
-            }
-        }
-
-        function render() {
-            updateStatusBar();
-            const mainView = document.getElementById('main-view');
-            mainView.innerHTML = '';
-
-            switch (gameState.currentScreen) {
-                case 'welcome':
-                    mainView.innerHTML = renderWelcomeScreen();
-                    break;
-                case 'name-input':
-                    mainView.innerHTML = renderNameInputScreen();
-                    break;
-                case 'map':
-                    mainView.innerHTML = renderMapScreen();
-                    break;
-                case 'material-hub':
-                    mainView.innerHTML = renderMaterialHubScreen();
-                    break;
-                case 'chapter-1':
-                    mainView.innerHTML = renderChapter1Screen();
-                    break;
-                case 'chapter-2':
-                    mainView.innerHTML = renderChapter2Screen();
-                    break;
-                case 'chapter-3':
-                    mainView.innerHTML = renderChapter3Screen();
-                    break;
-                case 'quiz':
-                    mainView.innerHTML = renderQuizScreen();
-                    break;
-                case 'minigame':
-                    mainView.innerHTML = renderMiniGameScreen();
-                    setTimeout(initMiniGameCanvas, 100);
-                    break;
-                case 'result':
-                    mainView.innerHTML = renderResultScreen();
-                    break;
-                case 'certificate':
-                    mainView.innerHTML = renderCertificateScreen();
-                    break;
-                case 'teacher-dashboard':
-                    mainView.innerHTML = renderTeacherDashboardScreen();
-                    initTeacherRealtimeListener();
-                    break;
-                default:
-                    mainView.innerHTML = renderWelcomeScreen();
-            }
-        }
-
-        function renderWelcomeScreen() {
-            return `
-                <div class="flex-grow flex flex-col items-center justify-center text-center p-6 bg-white/60 backdrop-blur-md rounded-3xl art-card-shadow border border-white/80 my-2">
-                    <div class="text-6xl sm:text-7xl mb-4 floating">🎨</div>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-800 mb-2">
-                        PETUALANGAN SENI RUPA
-                    </h2>
-                    <p class="text-indigo-600 font-bold text-lg sm:text-xl mb-6">
-                        Seni Rupa Kelas 5 SD/MI
-                    </p>
-                    
-                    <div class="flex flex-wrap justify-center gap-3 mb-8 max-w-lg">
-                        <span class="px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-xl font-semibold text-xs sm:text-sm">🖌️ Unsur & Prinsip</span>
-                        <span class="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-xl font-semibold text-xs sm:text-sm">🌀 Lembah Ritme</span>
-                        <span class="px-3 py-1.5 bg-pink-100 text-pink-700 rounded-xl font-semibold text-xs sm:text-sm">✏️ Proporsi & Komposisi</span>
-                        <span class="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-xl font-semibold text-xs sm:text-sm">🎮 Mini Game Asyik</span>
-                    </div>
-
-                    <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-2xl max-w-md w-full mb-8 text-left flex items-start space-x-3">
-                        <div class="text-3xl">${characterGuide.avatar}</div>
-                        <div>
-                            <div class="text-xs font-bold text-indigo-600 uppercase">Pemandu Seniman Muda</div>
-                            <p class="text-sm text-slate-700 font-medium">"Halo, Seniman Muda! Siap menjelajahi dunia Seni Rupa bersama Kika? Ada 3 nyawa di kuis dan mini game seru jika kamu bosan!"</p>
-                        </div>
-                    </div>
-
-                    <button onclick="navigateTo('name-input')" class="px-8 py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-lg rounded-2xl shadow-lg transform hover:-translate-y-1 transition-all duration-200 flex items-center space-x-3">
-                        <span>🎨 MULAI PETUALANGAN</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </div>
-            `;
-        }
-
-        function renderNameInputScreen() {
-            return `
-                <div class="flex-grow flex flex-col items-center justify-center text-center p-6 sm:p-10 bg-white/70 backdrop-blur-md rounded-3xl art-card-shadow border border-white my-2">
-                    <div class="text-5xl mb-4">✍️</div>
-                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-2">KENALAN DULU YUK!</h3>
-                    <p class="text-slate-600 mb-8 text-sm sm:text-base">Masukkan nama lengkap kamu sebelum memulai petualangan seni.</p>
-                    
-                    <div class="w-full max-w-md mb-6">
-                        <input type="text" id="player-name-input" placeholder="Contoh: Budi Santoso" class="w-full px-5 py-4 bg-slate-50 border-2 border-indigo-200 focus:border-indigo-600 focus:outline-none rounded-2xl text-center text-lg font-bold text-slate-700 shadow-inner" value="${gameState.playerName}">
-                    </div>
-
-                    <button onclick="handleStartAdventure()" class="w-full max-w-md py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-lg rounded-2xl shadow-lg transition-all duration-200 flex items-center justify-center space-x-2">
-                        <span>LANJUTKAN</span>
-                        <i class="fa-solid fa-check"></i>
-                    </button>
-                </div>
-            `;
-        }
-
-        function handleStartAdventure() {
-            const input = document.getElementById('player-name-input');
-            const name = input.value.trim();
-            if (!name) {
-                showAlert("Perhatian", "Mohon masukkan nama kamu terlebih dahulu!", "⚠️");
+        function mulaiPetualangan() {
+            const namaInput = document.getElementById('input-nama').value.trim();
+            if(!namaInput) {
+                alert("Silakan masukkan nama kamu terlebih dahulu!");
                 return;
             }
-            gameState.playerName = name;
-            characterGuide.speak(`Halo, ${name}! Selamat datang di Petualangan Seni Rupa.`);
-            navigateTo('map');
+            state.nama = namaInput;
+            document.getElementById('display-nama').innerText = namaInput;
+            gantiLayar('map');
+            kirimDataFirebase("Menu Utama", 0, 3, 0);
         }
 
-        function renderMapScreen() {
-            return `
-                <div class="flex-grow flex flex-col p-4 sm:p-6 bg-white/70 backdrop-blur-md rounded-3xl art-card-shadow border border-white my-2">
-                    <div class="text-center mb-6">
-                        <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wider">Peta Perjalanan</span>
-                        <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-1">PILIH DUNIA SENI</h3>
-                        <p class="text-sm text-slate-600 mt-1">Halo, ${gameState.playerName}! Pilih materi atau langsung uji pemahamanmu.</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <!-- Level 1 -->
-                        <div onclick="navigateTo('chapter-1')" class="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white p-6 rounded-2xl art-card-shadow cursor-pointer transform hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between">
-                            <div>
-                                <div class="text-3xl mb-3">🎨</div>
-                                <span class="bg-white/20 text-xs font-bold px-2 py-1 rounded-lg">BAB 1</span>
-                                <h4 class="text-lg font-extrabold mt-2">GALERI UNSUR & PRINSIP</h4>
-                                <p class="text-xs text-indigo-100 mt-2">Mempelajari titik, garis, bentuk, warna, tekstur, hingga prinsip kesimbangan dan kesatuan.</p>
-                            </div>
-                            <div class="mt-4 flex items-center justify-between text-xs font-bold pt-3 border-t border-indigo-400/40">
-                                <span>Pelajari Materi</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </div>
-                        </div>
-
-                        <!-- Level 2 -->
-                        <div onclick="navigateTo('chapter-2')" class="bg-gradient-to-br from-purple-500 to-violet-700 text-white p-6 rounded-2xl art-card-shadow cursor-pointer transform hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between">
-                            <div>
-                                <div class="text-3xl mb-3">🌀</div>
-                                <span class="bg-white/20 text-xs font-bold px-2 py-1 rounded-lg">BAB 2</span>
-                                <h4 class="text-lg font-extrabold mt-2">LEMBAH RITME & POLA</h4>
-                                <p class="text-xs text-purple-100 mt-2">Eksplorasi ritme, pengulangan bentuk, garis, warna pada objek di sekitar kita.</p>
-                            </div>
-                            <div class="mt-4 flex items-center justify-between text-xs font-bold pt-3 border-t border-purple-400/40">
-                                <span>Pelajari Materi</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </div>
-                        </div>
-
-                        <!-- Level 3 -->
-                        <div onclick="navigateTo('chapter-3')" class="bg-gradient-to-br from-pink-500 to-rose-700 text-white p-6 rounded-2xl art-card-shadow cursor-pointer transform hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between">
-                            <div>
-                                <div class="text-3xl mb-3">✏️</div>
-                                <span class="bg-white/20 text-xs font-bold px-2 py-1 rounded-lg">BAB 3</span>
-                                <h4 class="text-lg font-extrabold mt-2">STUDIO PROPORSI & KOMPOSISI</h4>
-                                <p class="text-xs text-pink-100 mt-2">Belajar mengatur ukuran proporsi objek dan komposisi tata letak gambar agar menarik.</p>
-                            </div>
-                            <div class="mt-4 flex items-center justify-between text-xs font-bold pt-3 border-t border-pink-400/40">
-                                <span>Pelajari Materi</span>
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Action Bar: Hub & Quiz & Mini Game -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-auto">
-                        <button onclick="navigateTo('material-hub')" class="py-4 bg-white hover:bg-slate-50 border-2 border-indigo-200 text-indigo-700 font-extrabold rounded-2xl shadow-sm transition-all flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-book-open"></i>
-                            <span>📚 PUSAT MATERI</span>
-                        </button>
-                        <button onclick="startQuiz()" class="py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold rounded-2xl shadow-lg transition-all flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-gamepad"></i>
-                            <span>🚀 KUIS (3 NYAWA)</span>
-                        </button>
-                        <button onclick="navigateTo('minigame')" class="py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold rounded-2xl shadow-lg transition-all flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-puzzle-piece"></i>
-                            <span>🎮 MINI GAME (BOSAN?)</span>
-                        </button>
-                    </div>
-                </div>
-            `;
+        // Sinkronisasi Firebase Realtime
+        async function kirimDataFirebase(aktivitas, skor, nyawa, posisi) {
+            if(!state.nama) return;
+            try {
+                await window.setDoc(window.doc(window.db, "progres_siswa", state.nama), {
+                    nama_siswa: state.nama,
+                    kelas: "Kelas 5 SD/MI",
+                    materi_yang_dimainkan: aktivitas,
+                    skor: skor,
+                    jumlah_nyawa_sisa: nyawa,
+                    posisi_soal: posisi,
+                    timestamp: window.serverTimestamp()
+                });
+            } catch (e) {
+                console.error("Gagal sinkronisasi firebase:", e);
+            }
         }
 
-        function startQuiz() {
-            prepareShuffledQuiz();
-            gameState.quizStarted = true;
-            gameState.currentQuestionIndex = 0;
-            gameState.score = 0;
-            gameState.lives = 3;
-            gameState.userAnswers = {};
-            syncStudentProgressToFirebase();
-            navigateTo('quiz');
+        // Materi Pembelajaran
+        function bukaMateri(bab) {
+            let judul = "";
+            let isi = "";
+            if(bab === 1) {
+                judul = "🎨 Level 1: Galeri Unsur & Prinsip Seni Rupa";
+                isi = `<p><b>1. Unsur Seni Rupa:</b> Titik, garis, bidang, bentuk, warna, tekstur, dan ruang.</p>
+                       <p><b>2. Prinsip Seni Rupa:</b> Kesatuan, keseimbangan, ritme, kontras, dan pusat perhatian.</p>
+                       <p><b>Contoh Sekitar:</b> Motif kain batik, warna bunga di taman, garis pagar rumah.</p>`;
+            } else if(bab === 2) {
+                judul = "🌀 Level 2: Lembah Ritme & Pola";
+                isi = `<p><b>1. Pengertian Ritme:</b> Pengulangan unsur seni (garis/bentuk/warna) secara teratur.</p>
+                       <p><b>2. Pola Pengulangan:</b> Ubin lantai, jeruji pagar, atau motif kain berulang.</p>
+                       <p><b>Contoh Sekitar:</b> Garis zebra cross, kelopak bunga matahari.</p>`;
+            } else if(bab === 3) {
+                judul = "✏️ Level 3: Studio Proporsi & Komposisi";
+                isi = `<p><b>1. Proporsi:</b> Kesesuaian ukuran antar bagian objek (misal: ukuran gelas dan kendi).</p>
+                       <p><b>2. Komposisi:</b> Penataan tata letak objek dalam bidang gambar (simetris/asimetris).</p>`;
+            }
+            document.getElementById('materi-judul').innerText = judul;
+            document.getElementById('materi-konten').innerHTML = isi;
+            gantiLayar('materi');
+            kirimDataFirebase(`Materi Bab ${bab}`, state.skor, state.nyawa, state.soalIndex);
         }
 
-        function renderMaterialHubScreen() {
-            return `
-                <div class="flex-grow flex flex-col p-4 sm:p-6 bg-white/70 backdrop-blur-md rounded-3xl art-card-shadow border border-white my-2">
-                    <div class="flex items-center justify-between mb-6 border-b pb-4">
-                        <div>
-                            <span class="text-xs font-bold text-indigo-600 uppercase">Pustaka Pembelajaran</span>
-                            <h3 class="text-2xl font-extrabold text-slate-800">MATERI SENI RUPA KELAS 5</h3>
-                        </div>
-                        <button onclick="navigateTo('map')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition-all">
-                            <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Peta
-                        </button>
-                    </div>
-
-                    <div class="space-y-4 mb-6">
-                        <div class="p-5 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-between">
-                            <div class="flex items-center space-x-4">
-                                <div class="text-3xl">🎨</div>
-                                <div>
-                                    <h4 class="font-extrabold text-indigo-900">Bab 1: Unsur dan Prinsip Seni Rupa di Sekitar Kita</h4>
-                                    <p class="text-xs text-indigo-700 mt-0.5">Titik, garis, bidang, warna primer/sekunder, tekstur, keseimbangan, kesatuan.</p>
-                                </div>
-                            </div>
-                            <button onclick="navigateTo('chapter-1')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs">Buka</button>
-                        </div>
-
-                        <div class="p-5 bg-purple-50 border border-purple-100 rounded-2xl flex items-center justify-between">
-                            <div class="flex items-center space-x-4">
-                                <div class="text-3xl">🌀</div>
-                                <div>
-                                    <h4 class="font-extrabold text-purple-900">Bab 2: Mengeksplorasi Ritme dalam Objek di Sekitar Kita</h4>
-                                    <p class="text-xs text-purple-700 mt-0.5">Ritme, pengulangan bentuk, garis, warna pada alam dan benda sehari-hari.</p>
-                                </div>
-                            </div>
-                            <button onclick="navigateTo('chapter-2')" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs">Buka</button>
-                        </div>
-
-                        <div class="p-5 bg-pink-50 border border-pink-100 rounded-2xl flex items-center justify-between">
-                            <div class="flex items-center space-x-4">
-                                <div class="text-3xl">✏️</div>
-                                <div>
-                                    <h4 class="font-extrabold text-pink-900">Bab 3: Menggambar Objek dengan Proporsi dan Komposisi</h4>
-                                    <p class="text-xs text-pink-700 mt-0.5">Proporsi ukuran objek, komposisi simetris/asimetris, penataan bidang gambar.</p>
-                                </div>
-                            </div>
-                            <button onclick="navigateTo('chapter-3')" class="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl text-xs">Buka</button>
-                        </div>
-                    </div>
-
-                    <div class="mt-auto flex flex-wrap justify-center gap-3">
-                        <button onclick="startQuiz()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl shadow-md text-sm flex items-center space-x-2">
-                            <i class="fa-solid fa-gamepad"></i>
-                            <span>🚀 Mulai Kuis (3 Nyawa)</span>
-                        </button>
-                        <button onclick="navigateTo('minigame')" class="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-extrabold rounded-2xl shadow-md text-sm flex items-center space-x-2">
-                            <i class="fa-solid fa-puzzle-piece"></i>
-                            <span>🎮 Main Mini Game</span>
-                        </button>
-                    </div>
-                </div>
-            `;
+        function kembaliKePeta() {
+            gantiLayar('map');
+            kirimDataFirebase("Peta Petualangan", state.skor, state.nyawa, state.soalIndex);
         }
 
-        function renderChapter1Screen() {
-            return `
-                <div class="flex-grow flex flex-col p-4 sm:p-6 bg-white/70 backdrop-blur-md rounded-3xl art-card-shadow border border-white my-2">
-                    <div class="flex items-center justify-between mb-4 border-b pb-3">
-                        <div class="flex items-center space-x-3">
-                            <div class="text-3xl">🎨</div>
-                            <div>
-                                <span class="text-xs font-bold text-indigo-600 uppercase">BAB 1</span>
-                                <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800">Galeri Unsur & Prinsip Seni Rupa</h3>
-                            </div>
-                        </div>
-                        <button onclick="navigateTo('map')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs">
-                            <i class="fa-solid fa-arrow-left mr-1"></i> Peta
-                        </button>
-                    </div>
-
-                    <div class="space-y-4 text-slate-700 text-sm sm:text-base leading-relaxed overflow-y-auto max-h-[60vh] pr-2 mb-4">
-                        <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 flex items-start space-x-3">
-                            <div class="text-2xl">${characterGuide.avatar}</div>
-                            <div>
-                                <h4 class="font-bold text-indigo-900">Catatan Kika:</h4>
-                                <p class="text-xs text-indigo-800">"Seni rupa di sekitar kita sangat kaya! Mari kita pelajari unsur-unsur pembentuknya."</p>
-                            </div>
-                        </div>
-                        <h4 class="font-extrabold text-slate-800 text-lg mt-4">1. Unsur-Unsur Seni Rupa</h4>
-                        <p>Unsur seni rupa adalah bagian terkecil yang menyusun sebuah karya seni sehingga dapat dinikmati keindahannya meliputi titik, garis, bidang, bentuk, warna, tekstur, dan ruang.</p>
-                        <h4 class="font-extrabold text-slate-800 text-lg mt-4">2. Prinsip-Prinsip Seni Rupa</h4>
-                        <p>Keseimbangan, kesatuan, pusat perhatian, dan kontras.</p>
-                    </div>
-
-                    <div class="flex justify-between items-center mt-auto pt-4 border-t">
-                        <button onclick="navigateTo('map')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs">Kembali ke Peta</button>
-                        <button onclick="navigateTo('chapter-2')" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center space-x-2">
-                            <span>Lanjut ke Bab 2</span>
-                            <i class="fa-solid fa-arrow-right"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
+        function bukaMateriDariKuis() {
+            bukaMateri(1);
         }
 
-        function renderChapter2Screen() {
-            return `
-                <div class="flex-grow flex flex-col p-4 sm:p-6 bg-white/70 backdrop-blur-md rounded-3xl art-card-shadow border border-white my-2">
-                    <div class="flex items-center justify-between mb-4 border-b pb-3">
-                        <div class="flex items-center space-x-3">
-                            <div class="text-3xl">🌀</div>
-                            <div>
-                                <span class="text-xs font-bold text-purple-600 uppercase">BAB 2</span>
-                                <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800">Lembah Ritme & Pola</h3>
-                            </div>
-                        </div>
-                        <button onclick="navigateTo('map')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs">
-                            <i class="fa-solid fa-arrow-left mr-1"></i> Peta
-                        </button>
-                    </div>
-
-                    <div class="space-y-4 text-slate-700 text-sm sm:text-base leading-relaxed overflow-y-auto max-h-[60vh] pr-2 mb-4">
-                        <div class="p-4 bg-purple-50 rounded-2xl border border-purple-100 flex items-start space-x-3">
-                            <div class="text-2xl">${characterGuide.avatar}</div>
-                            <div>
-                                <h4 class="font-bold text-purple-900">Catatan Kika:</h4>
-                                <p class="text-xs text-purple-800">"Ritme membuat karya seni terasa hidup seperti dentuman musik yang berulang teratur!"</p>
-                            </div>
-                        </div>
-                        <h4 class="font-extrabold text-slate-800 text-lg mt-4">1. Pengertian Ritme dalam Seni Rupa</h4>
-                        <p>Ritme adalah kesan gerakan yang timbul karena adanya pengulangan unsur seni secara teratur dan terus menerus.</p>
-                    </div>
-
-                    <div class="flex justify-between items-center mt-auto pt-4 border-t">
-                        <button onclick="navigateTo('chapter-1')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs">Bab Sebelumnya</button>
-                        <button onclick="navigateTo('chapter-3')" class="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs flex items-center space-x-2">
-                            <span>Lanjut ke Bab 3</span>
-                            <i class="fa-solid fa-arrow-right"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
+        // Sistem Kuis & Acak Jawaban (Fisher-Yates Shuffle)
+        function mulaiKuis() {
+            state.skor = 0;
+            state.nyawa = 3;
+            state.soalIndex = 0;
+            // Acak urutan soal
+            kuisAktifSoal = [...bankSoal].sort(() => Math.random() - 0.5);
+            gantiLayar('kuis');
+            muatSoal();
         }
 
-        function renderChapter3Screen() {
-            return `
-                <div class="flex-grow flex flex-col p-4 sm:p-6 bg-white/70 backdrop-blur-md rounded-3xl art-card-shadow border border-white my-2">
-                    <div class="flex items-center justify-between mb-4 border-b pb-3">
-                        <div class="flex items-center space-x-3">
-                            <div class="text-3xl">✏️</div>
-                            <div>
-                                <span class="text-xs font-bold text-pink-600 uppercase">BAB 3</span>
-                                <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800">Studio Proporsi & Komposisi</h3>
-                            </div>
-                        </div>
-                        <button onclick="navigateTo('map')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs">
-                            <i class="fa-solid fa-arrow-left mr-1"></i> Peta
-                        </button>
-                    </div>
+        function muatSoal() {
+            if(state.soalIndex >= kuisAktifSoal.length || state.nyawa <= 0) {
+                selesaiKuis();
+                return;
+            }
 
-                    <div class="space-y-4 text-slate-700 text-sm sm:text-base leading-relaxed overflow-y-auto max-h-[60vh] pr-2 mb-4">
-                        <div class="p-4 bg-pink-50 rounded-2xl border border-pink-100 flex items-start space-x-3">
-                            <div class="text-2xl">${characterGuide.avatar}</div>
-                            <div>
-                                <h4 class="font-bold text-pink-900">Catatan Kika:</h4>
-                                <p class="text-xs text-pink-800">"Proporsi dan komposisi adalah rahasia agar gambar buatanmu tampak profesional dan seimbang!"</p>
-                            </div>
-                        </div>
-                        <h4 class="font-extrabold text-slate-800 text-lg mt-4">1. Proporsi & Komposisi</h4>
-                        <p>Proporsi mengatur perbandingan ideal ukuran objek, sementara komposisi mengatur tata letak simetris maupun asimetris pada bidang gambar.</p>
-                    </div>
+            currentSoalObj = kuisAktifSoal[state.soalIndex];
+            document.getElementById('label-nomor-soal').innerText = `SOAL ${state.soalIndex + 1} DARI 50`;
+            document.getElementById('label-skor').innerText = `Skor: ${state.skor}`;
+            document.getElementById('kuis-nyawa').innerText = '❤️'.repeat(state.nyawa);
+            document.getElementById('display-nyawa').innerText = '❤️'.repeat(state.nyawa);
+            document.getElementById('teks-soal').innerText = currentSoalObj.soal;
 
-                    <div class="flex justify-between items-center mt-auto pt-4 border-t">
-                        <button onclick="navigateTo('chapter-2')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs">Bab Sebelumnya</button>
-                        <button onclick="startQuiz()" class="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl text-xs flex items-center space-x-2 shadow-md">
-                            <span>🚀 Mulai Kuis (3 Nyawa)</span>
-                            <i class="fa-solid fa-gamepad"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
+            // Acak opsi jawaban agar tidak selalu di A
+            let opsiAcak = [...currentSoalObj.opsi].sort(() => Math.random() - 0.5);
+            let containerOpsi = document.getElementById('container-opsi');
+            containerOpsi.innerHTML = '';
+
+            opsiAcak.forEach(opsi => {
+                let btn = document.createElement('button');
+                btn.className = "w-full text-left p-3 bg-white border border-gray-200 rounded-xl hover:bg-indigo-50 font-medium text-sm transition shadow-sm";
+                btn.innerText = opsi;
+                btn.onclick = () => cekJawaban(opsi, currentSoalObj.jawaban);
+                containerOpsi.appendChild(btn);
+            });
+
+            kirimDataFirebase("Mengerjakan Kuis", state.skor, state.nyawa, state.soalIndex + 1);
         }
 
-        // --- MINI GAME: TANGKAP WARNA & KUAS AJAIB ---
-        function renderMiniGameScreen() {
-            return `
-                <div class="flex-grow flex flex-col p-4 sm:p-6 bg-white/70 backdrop-blur-md rounded-3xl art-card-shadow border border-white my-2">
-                    <div class="flex items-center justify-between mb-4 border-b pb-3">
-                        <div class="flex items-center space-x-3">
-                            <div class="text-3xl">🎮</div>
-                            <div>
-                                <span class="text-xs font-bold text-amber-600 uppercase">Mini Game Istirahat</span>
-                                <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800">Tangkep Kuas Warna!</h3>
-                            </div>
-                        </div>
-                        <button onclick="navigateTo('map')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs">
-                            <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Peta
-                        </button>
-                    </div>
+        function cekJawaban(pilihanSiswa, jawabanBenar) {
+            let containerOpsi = document.getElementById('container-opsi');
+            let tombols = containerOpsi.getElementsByTagName('button');
 
-                    <p class="text-xs sm:text-sm text-slate-600 mb-4 text-center">Gunakan tombol Panah Kiri/Kanan atau geser layar untuk menggerakkan wadah cat dan menangkap kuas warna sebanyak mungkin!</p>
-
-                    <div class="relative w-full max-w-xl mx-auto bg-slate-900 rounded-2xl overflow-hidden art-card-shadow border-4 border-amber-400 aspect-[4/3] flex flex-col">
-                        <canvas id="minigame-canvas" class="w-full h-full cursor-pointer"></canvas>
-                        <div id="game-overlay" class="absolute inset-0 bg-slate-950/80 flex flex-col items-center justify-center text-white p-6 text-center">
-                            <div class="text-5xl mb-3">🎨</div>
-                            <h4 class="text-2xl font-extrabold mb-2">Tangkep Kuas Warna</h4>
-                            <p class="text-xs text-slate-300 mb-6">Kumpulkan poin cat warna tanpa menyentuh tinta hitam!</p>
-                            <button onclick="startMiniGamePlay()" class="px-8 py-3.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold rounded-xl shadow-lg text-sm transition-all transform hover:scale-105">
-                                Mulai Bermain Game
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        let gameInterval = null;
-        let gameScore = 0;
-        let bucketX = 150;
-        let items = [];
-        let isGameRunning = false;
-
-        function initMiniGameCanvas() {
-            const canvas = document.getElementById('minigame-canvas');
-            if(!canvas) return;
-            canvas.width = 400;
-            canvas.height = 300;
-            bucketX = canvas.width / 2 - 35;
-        }
-
-        function startMiniGamePlay() {
-            const overlay = document.getElementById('game-overlay');
-            if(overlay) overlay.classList.add('hidden');
-            gameScore = 0;
-            items = [];
-            isGameRunning = true;
-
-            const canvas = document.getElementById('minigame-canvas');
-            if(!canvas) return;
-            const ctx = canvas.getContext('2d');
-
-            // Listeners for bucket movement
-            window.onkeydown = (e) => {
-                if(!isGameRunning) return;
-                if(e.key === 'ArrowLeft') bucketX = Math.max(0, bucketX - 25);
-                if(e.key === 'ArrowRight') bucketX = Math.min(canvas.width - 70, bucketX + 25);
-            };
-
-            canvas.ontouchmove = (e) => {
-                if(!isGameRunning) return;
-                const rect = canvas.getBoundingClientRect();
-                const touchX = e.touches[0].clientX - rect.left;
-                bucketX = Math.max(0, Math.min(canvas.width - 70, touchX - 35));
-            };
-
-            if(gameInterval) clearInterval(gameInterval);
-            gameInterval = setInterval(() => {
-                if(!isGameRunning) return;
-
-                // Spawn item
-                if(Math.random() < 0.05) {
-                    items.push({
-                        x: Math.random() * (canvas.width - 30),
-                        y: -30,
-                        speed: 2 + Math.random() * 2,
-                        type: Math.random() < 0.25 ? 'black' : 'color',
-                        emoji: Math.random() < 0.25 ? '🖤' : ['🖌️','🎨','🔴','🔵','🟡'][Math.floor(Math.random()*5)]
-                    });
+            for(let b of tombols) {
+                b.disabled = true;
+                if(b.innerText === jawabanBenar) {
+                    b.classList.add('bg-green-100', 'border-green-500');
+                } else if(b.innerText === pilihanSiswa && pilihanSiswa !== jawabanBenar) {
+                    b.classList.add('bg-red-100', 'border-red-500');
                 }
+            }
 
-                // Update items
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                // Draw bucket
-                ctx.fillStyle = '#6366f1';
-                ctx.roundRect ? ctx.roundRect(bucketX, canvas.height - 35, 70, 25, 8) : ctx.fillRect(bucketX, canvas.height - 35, 70, 25);
-                ctx.fill();
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '12px sans-serif';
-                ctx.fillText("Wadah Cat", bucketX + 5, canvas.height - 18);
-
-                // Draw & update items
-                for(let i = items.length - 1; i >= 0; i--) {
-                    let it = items[i];
-                    it.y += it.speed;
-                    ctx.font = '24px sans-serif';
-                    ctx.fillText(it.emoji, it.x, it.y);
-
-                    // Check collision with bucket
-                    if(it.y >= canvas.height - 45 && it.y <= canvas.height - 15 && it.x >= bucketX - 10 && it.x <= bucketX + 65) {
-                        if(it.type === 'black') {
-                            gameScore = Math.max(0, gameScore - 5);
-                        } else {
-                            gameScore += 10;
-                        }
-                        items.splice(i, 1);
-                        continue;
-                    }
-
-                    // Remove out of bounds
-                    if(it.y > canvas.height) {
-                        items.splice(i, 1);
-                    }
-                }
-
-                // Draw Score
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 16px sans-serif';
-                ctx.fillText(`Skor Game: ${gameScore}`, 15, 25);
-
-            }, 1000 / 60);
-        }
-
-        // --- QUIZ GAMEPLAY WITH 3 LIVES ---
-        function renderQuizScreen() {
-            const totalQuestions = gameState.shuffledQuizData.length;
-            const currentIdx = gameState.currentQuestionIndex;
-            const q = gameState.shuffledQuizData[currentIdx];
-            const answered = gameState.userAnswers[currentIdx] !== undefined;
-            const selectedOption = gameState.userAnswers[currentIdx];
-            const progressPercent = ((currentIdx + 1) / totalQuestions) * 100;
-
-            return `
-                <div class="flex-grow flex flex-col p-4 sm:p-6 bg-white/70 backdrop-blur-md rounded-3xl art-card-shadow border border-white my-2">
-                    <!-- Quiz Header Bar -->
-                    <div class="flex flex-wrap items-center justify-between mb-4 border-b pb-3 gap-2">
-                        <div>
-                            <span class="text-xs font-bold text-indigo-600 uppercase">Kuis Petualangan (Soal ${currentIdx + 1} dari ${totalQuestions})</span>
-                            <h3 class="text-base sm:text-lg font-extrabold text-slate-800">Bab ${q.chapter} • Tingkat: ${q.level}</h3>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="px-3 py-1 bg-rose-50 text-rose-600 border border-rose-200 rounded-xl font-extrabold text-xs" title="Nyawa Tersisa">
-                                Nyawa: ${'❤️'.repeat(gameState.lives)}${'🖤'.repeat(3 - gameState.lives)}
-                            </span>
-                            <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-xl font-bold text-xs">Skor: ${gameState.score}</span>
-                            <button onclick="returnToMaterialFromQuiz()" class="px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold rounded-xl text-xs flex items-center space-x-1">
-                                <i class="fa-solid fa-book-open"></i>
-                                <span>📚 Materi</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Progress Bar -->
-                    <div class="w-full bg-slate-200 h-2.5 rounded-full mb-6 overflow-hidden">
-                        <div class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: ${progressPercent}%"></div>
-                    </div>
-
-                    <!-- Question Card -->
-                    <div class="bg-indigo-50/60 border border-indigo-100 p-5 rounded-2xl mb-6 flex flex-col sm:flex-row items-center sm:items-start gap-4">
-                        <div class="w-16 h-16 rounded-2xl bg-white flex items-center justify-center text-3xl shadow-sm flex-shrink-0 border border-indigo-200">
-                            ${q.image}
-                        </div>
-                        <div class="flex-grow text-center sm:text-left">
-                            <div class="text-xs font-bold text-indigo-600 mb-1">PERTANYAAN</div>
-                            <h4 class="text-base sm:text-lg font-bold text-slate-800 leading-snug">${q.question}</h4>
-                        </div>
-                    </div>
-
-                    <!-- Options Grid -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                        ${q.options.map((opt, idxOpt) => {
-                            let btnClass = "bg-white hover:bg-indigo-50 border-2 border-slate-200 text-slate-700";
-                            let iconIndicator = "";
-                            const letterKey = ['A', 'B', 'C', 'D'][idxOpt];
-
-                            if (answered) {
-                                if (opt.key === q.correct) {
-                                    btnClass = "bg-emerald-500 border-emerald-600 text-white font-bold shadow-md";
-                                    iconIndicator = '<i class="fa-solid fa-check ml-auto"></i>';
-                                } else if (opt.key === selectedOption) {
-                                    btnClass = "bg-rose-500 border-rose-600 text-white font-bold shadow-md";
-                                    iconIndicator = '<i class="fa-solid fa-xmark ml-auto"></i>';
-                                } else {
-                                    btnClass = "bg-slate-100 border-slate-200 text-slate-400 opacity-60";
-                                }
-                            }
-
-                            return `
-                                <button onclick="handleAnswer('${opt.key}')" ${answered ? 'disabled' : ''} class="p-4 rounded-2xl font-semibold text-sm sm:text-base flex items-center justify-between transition-all duration-200 ${btnClass}">
-                                    <div class="flex items-center space-x-3">
-                                        <span class="w-8 h-8 rounded-xl bg-slate-200/50 flex items-center justify-center text-xs font-extrabold flex-shrink-0">${letterKey}</span>
-                                        <span class="text-left">${opt.text}</span>
-                                    </div>
-                                    ${iconIndicator}
-                                </button>
-                            `;
-                        }).join('')}
-                    </div>
-
-                    <!-- Answer Feedback & Explanation Box -->
-                    ${answered ? renderFeedbackBox(q, selectedOption) : ''}
-                </div>
-            `;
-        }
-
-        function handleAnswer(optionKey) {
-            if (gameState.userAnswers[gameState.currentQuestionIndex] !== undefined) return;
-
-            gameState.userAnswers[gameState.currentQuestionIndex] = optionKey;
-            const q = gameState.shuffledQuizData[gameState.currentQuestionIndex];
-
-            if (optionKey === q.correct) {
-                gameState.score += 20;
-                characterGuide.speak(`Benar, ${gameState.playerName}! Hebat sekali!`);
+            if(pilihanSiswa === jawabanBenar) {
+                state.skor += 20;
             } else {
-                gameState.lives -= 1;
-                characterGuide.speak(`Belum tepat, ${gameState.playerName}. Nyawamu berkurang satu.`);
-                if (gameState.lives <= 0) {
-                    syncStudentProgressToFirebase();
-                    setTimeout(() => {
-                        showAlert("Game Over", "Nyawamu telah habis! Jangan menyerah, ayo belajar lagi.", "💀");
-                        navigateTo('result');
-                    }, 500);
+                state.nyawa -= 1;
+            }
+
+            setTimeout(() => {
+                state.soalIndex++;
+                if(state.nyawa <= 0) {
+                    alert("Nyawa kamu habis! Game Over.");
+                    selesaiKuis();
+                } else {
+                    muatSoal();
+                }
+            }, 1200);
+        }
+
+        function selesaiKuis() {
+            gantiLayar('hasil');
+            document.getElementById('hasil-nama').innerText = state.nama;
+            document.getElementById('hasil-skor').innerText = state.skor;
+            
+            let kategori = "🎨 Calon Seniman";
+            if(state.skor >= 850) kategori = "🏆 Master Seni Rupa";
+            else if(state.skor >= 600) kategori = "🌟 Seniman Muda Hebat";
+            
+            document.getElementById('hasil-kategori').innerText = kategori;
+            kirimDataFirebase("Selesai Kuis", state.skor, state.nyawa, state.soalIndex);
+        }
+
+        function ulangiKuis() {
+            mulaiKuis();
+        }
+
+        // Mini Game Interaktif ("Tangkep Kuas") dengan Akhir Menang/Kalah Berbatas Waktu
+        let mgTimer = null;
+        let mgSisaWaktu = 20;
+        let mgSkorGame = 0;
+        let mgIntervalMuncul = null;
+
+        function bukaMiniGame() {
+            gantiLayar('minigame');
+            document.getElementById('btn-mulai-mg').classList.remove('hidden');
+            document.getElementById('mg-arena').innerHTML = '<p class="text-center text-gray-400 mt-20 text-xs">Tekan tombol mulai di bawah untuk bermain!</p>';
+            mgSisaWaktu = 20;
+            mgSkorGame = 0;
+            document.getElementById('mg-status').innerText = `Waktu: 20s | Skor: 0`;
+            kirimDataFirebase("Bermain Mini Game", state.skor, state.nyawa, state.soalIndex);
+        }
+
+        function mulaiMiniGameSistem() {
+            document.getElementById('btn-mulai-mg').classList.add('hidden');
+            mgSisaWaktu = 20;
+            mgSkorGame = 0;
+            let arena = document.getElementById('mg-arena');
+            arena.innerHTML = '';
+
+            mgTimer = setInterval(() => {
+                mgSisaWaktu--;
+                document.getElementById('mg-status').innerText = `Waktu: ${mgSisaWaktu}s | Skor: ${mgSkorGame}`;
+                if(mgSisaWaktu <= 0) {
+                    clearInterval(mgTimer);
+                    clearInterval(mgIntervalMuncul);
+                    arena.innerHTML = `<div class="flex flex-col items-center justify-center h-full"><h3 class="font-bold text-lg text-purple-900">Waktu Habis!</h3><p class="text-xs">Skor Mini Game Kamu: ${mgSkorGame}</p><button onclick="bukaMiniGame()" class="mt-2 bg-purple-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold">Main Lagi</button></div>`;
+                }
+            }, 1000);
+
+            mgIntervalMuncul = setInterval(() => {
+                if(mgSisaWaktu > 0) {
+                    munculkanKuasTarget();
+                }
+            }, 800);
+        }
+
+        function munculkanKuasTarget() {
+            let arena = document.getElementById('mg-arena');
+            let item = document.createElement('div');
+            let isHitam = Math.random() < 0.3; // 30% kesempatan kuas hitam (penghalang)
+            
+            item.className = `absolute text-2xl cursor-pointer transition transform hover:scale-125`;
+            item.innerText = isHitam ? '🧹' : ['🎨', '🖌️', '🖍️'][Math.floor(Math.random()*3)];
+            
+            let maxX = arena.clientWidth - 40;
+            let maxY = arena.clientHeight - 40;
+            item.style.left = Math.floor(Math.random() * maxX) + 'px';
+            item.style.top = Math.floor(Math.random() * maxY) + 'px';
+
+            item.onclick = () => {
+                if(isHitam) {
+                    mgSkorGame = Math.max(0, mgSkorGame - 5);
+                } else {
+                    mgSkorGame += 10;
+                }
+                document.getElementById('mg-status').innerText = `Waktu: ${mgSisaWaktu}s | Skor: ${mgSkorGame}`;
+                item.remove();
+            };
+
+            arena.innerHTML = '';
+            arena.appendChild(item);
+        }
+
+        // Sertifikat Otomatis
+        function tampilkanSertifikat() {
+            document.getElementById('sertifikat-nama').innerText = state.nama;
+            document.getElementById('sertifikat-skor').innerText = `${state.skor} / 1000`;
+            let d = new Date();
+            document.getElementById('sertifikat-tanggal').innerText = d.toLocaleDateString('id-ID');
+            document.getElementById('modal-sertifikat').classList.remove('hidden');
+        }
+
+        function tutupSertifikat() {
+            document.getElementById('modal-sertifikat').classList.add('hidden');
+        }
+
+        // Mode Guru & Monitoring Realtime dengan onSnapshot Firestore
+        function bukaModalGuru() {
+            document.getElementById('modal-guru').classList.remove('hidden');
+        }
+
+        function tutupModalGuru() {
+            document.getElementById('modal-guru').classList.add('hidden');
+        }
+
+        function cekPinGuru() {
+            let pin = document.getElementById('input-pin').value;
+            if(pin === "123456") {
+                document.getElementById('form-pin-guru').classList.add('hidden');
+                document.getElementById('dashboard-guru').classList.remove('hidden');
+                mulaiMonitoringRealtime();
+            } else {
+                alert("PIN Salah! Gunakan PIN standar: 123456");
+            }
+        }
+
+        function mulaiMonitoringRealtime() {
+            const tabelBody = document.getElementById("tabel-monitoring-siswa");
+            
+            window.onSnapshot(window.collection(window.db, "progres_siswa"), (snapshot) => {
+                let rowsHTML = "";
+                if(snapshot.empty) {
+                    tabelBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Belum ada data siswa yang masuk.</td></tr>`;
                     return;
                 }
-            }
-
-            syncStudentProgressToFirebase();
-            render();
-        }
-
-        function renderFeedbackBox(q, selectedOption) {
-            const isCorrect = selectedOption === q.correct;
-            const isLastQuestion = gameState.currentQuestionIndex === gameState.shuffledQuizData.length - 1;
-
-            return `
-                <div class="mt-auto p-4 rounded-2xl border ${isCorrect ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-900'} animate-fade-in">
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center space-x-2">
-                            <span class="text-xl">${isCorrect ? '✓' : '✗'}</span>
-                            <span class="font-extrabold text-sm sm:text-base">${isCorrect ? 'BENAR!' : 'BELUM TEPAT'}</span>
-                        </div>
-                        <span class="text-xs font-semibold px-2 py-1 rounded bg-white/60">Kunci: ${q.correct}</span>
-                    </div>
-                    <p class="text-xs sm:text-sm font-medium mb-3">${q.explanation}</p>
-                    
-                    <div class="flex justify-end">
-                        <button onclick="${isLastQuestion ? 'navigateTo(\'result\')' : 'nextQuestion()'}" class="px-6 py-2.5 ${isCorrect ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'} text-white font-extrabold rounded-xl text-xs sm:text-sm shadow-md flex items-center space-x-2">
-                            <span>${isLastQuestion ? '🎉 Lihat Hasil Akhir' : 'Lanjut ke Soal Berikutnya'}</span>
-                            <i class="fa-solid fa-arrow-right"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function nextQuestion() {
-            if (gameState.currentQuestionIndex < gameState.shuffledQuizData.length - 1) {
-                gameState.currentQuestionIndex++;
-                syncStudentProgressToFirebase();
-                render();
-            } else {
-                syncStudentProgressToFirebase();
-                navigateTo('result');
-            }
-        }
-
-        function returnToMaterialFromQuiz() {
-            navigateTo('material-hub');
-        }
-
-        function renderResultScreen() {
-            let correctCount = 0;
-            let wrongCount = 0;
-
-            gameState.shuffledQuizData.forEach((q, idx) => {
-                if (gameState.userAnswers[idx] === q.correct) {
-                    correctCount++;
-                } else if (gameState.userAnswers[idx] !== undefined) {
-                    wrongCount++;
-                }
-            });
-
-            let categoryBadge = "🎨 CALON SENIMAN";
-            let badgeBg = "bg-amber-100 text-amber-800 border-amber-300";
-            if (gameState.score >= 850) {
-                categoryBadge = "🏆 MASTER SENI RUPA";
-                badgeBg = "bg-emerald-100 text-emerald-800 border-emerald-300";
-            } else if (gameState.score >= 600) {
-                categoryBadge = "🌟 SENIMAN MUDA HEBAT";
-                badgeBg = "bg-indigo-100 text-indigo-800 border-indigo-300";
-            }
-
-            characterGuide.speak(`Selamat, ${gameState.playerName}! Kuis telah selesai.`);
-
-            return `
-                <div class="flex-grow flex flex-col items-center justify-center p-6 bg-white/70 backdrop-blur-md rounded-3xl art-card-shadow border border-white my-2 text-center">
-                    <div class="text-6xl mb-3">🎉</div>
-                    <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-1">PETUALANGAN SELESAI!</h3>
-                    <p class="text-slate-600 text-sm mb-4">Hebat, ${gameState.playerName}! Kamu telah menyelesaikan kuis.</p>
-
-                    <div class="px-5 py-2 rounded-2xl border-2 font-extrabold text-sm sm:text-base mb-6 ${badgeBg}">
-                        ${categoryBadge}
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-lg mb-6">
-                        <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl">
-                            <div class="text-xs text-indigo-600 font-bold uppercase">Total Skor</div>
-                            <div class="text-2xl font-extrabold text-indigo-800 mt-1">${gameState.score} / 1000</div>
-                        </div>
-                        <div class="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl">
-                            <div class="text-xs text-emerald-600 font-bold uppercase">Jawaban Benar</div>
-                            <div class="text-2xl font-extrabold text-emerald-800 mt-1">${correctCount} / 50</div>
-                        </div>
-                        <div class="bg-rose-50 border border-rose-100 p-4 rounded-2xl">
-                            <div class="text-xs text-rose-600 font-bold uppercase">Nyawa Tersisa</div>
-                            <div class="text-2xl font-extrabold text-rose-800 mt-1">${'❤️'.repeat(gameState.lives)}</div>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-wrap justify-center gap-3 w-full max-w-md">
-                        <button onclick="navigateTo('certificate')" class="flex-grow py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold rounded-2xl shadow-lg flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-award"></i>
-                            <span>🏆 LIHAT SERTIFIKAT</span>
-                        </button>
-                        <button onclick="startQuiz()" class="px-6 py-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold rounded-2xl shadow-sm flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-rotate-right"></i>
-                            <span>🔄 ULANGI KUIS</span>
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderCertificateScreen() {
-            const today = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
-            let correctCount = 0;
-            gameState.shuffledQuizData.forEach((q, idx) => {
-                if (gameState.userAnswers[idx] === q.correct) correctCount++;
-            });
-
-            return `
-                <div class="flex-grow flex flex-col p-4 sm:p-6 bg-white/70 backdrop-blur-md rounded-3xl art-card-shadow border border-white my-2">
-                    <div class="flex items-center justify-between mb-4 border-b pb-3 print:hidden">
-                        <button onclick="navigateTo('result')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs">
-                            <i class="fa-solid fa-arrow-left mr-1"></i> Kembali
-                        </button>
-                        <button onclick="window.print()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center space-x-2 shadow">
-                            <i class="fa-solid fa-print"></i>
-                            <span>Cetak Sertifikat</span>
-                        </button>
-                    </div>
-
-                    <div class="bg-gradient-to-br from-amber-50 via-white to-indigo-50 border-8 border-double border-indigo-600 p-6 sm:p-10 rounded-3xl text-center shadow-2xl relative overflow-hidden my-auto">
-                        <div class="absolute top-4 left-4 text-3xl opacity-20">🎨</div>
-                        <div class="absolute bottom-4 right-4 text-3xl opacity-20">🖌️</div>
-
-                        <div class="text-indigo-600 font-bold text-xs sm:text-sm uppercase tracking-widest mb-1">KEMENTERIAN PENDIDIKAN DAN KEBUDAYAAN</div>
-                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-wide mb-2 font-serif">SERTIFIKAT PENGHARGAAN</h2>
-                        <p class="text-xs text-slate-500 italic mb-6">Diberikan secara resmi kepada Seniman Muda berprestasi</p>
-
-                        <div class="text-sm text-slate-600 mb-2">Atas keberhasilannya menyelesaikan dengan gemilang:</div>
-                        <div class="text-xl sm:text-3xl font-extrabold text-indigo-700 underline decoration-indigo-300 decoration-4 underline-offset-8 mb-4 uppercase">
-                            ${gameState.playerName || 'Seniman Muda'}
-                        </div>
-
-                        <div class="text-xs sm:text-sm text-slate-700 max-w-lg mx-auto mb-6 leading-relaxed font-medium">
-                            Dalam game edukasi interaktif <strong>"PETUALANGAN SENI RUPA KELAS 5 SD/MI"</strong>.
-                        </div>
-
-                        <div class="flex justify-center items-center gap-6 mb-8">
-                            <div class="bg-white/80 border border-indigo-200 px-6 py-3 rounded-2xl shadow-sm">
-                                <div class="text-xs text-slate-500 font-bold uppercase">Total Skor</div>
-                                <div class="text-lg font-extrabold text-indigo-600">${gameState.score} / 1000</div>
-                            </div>
-                            <div class="bg-white/80 border border-indigo-200 px-6 py-3 rounded-2xl shadow-sm">
-                                <div class="text-xs text-slate-500 font-bold uppercase">Jawaban Benar</div>
-                                <div class="text-lg font-extrabold text-emerald-600">${correctCount} dari 50 Soal</div>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-between items-end border-t border-indigo-200 pt-6 px-4">
-                            <div class="text-left">
-                                <div class="text-xs text-slate-500 font-semibold">Tanggal</div>
-                                <div class="text-xs font-bold text-slate-800">${today}</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="w-16 h-16 mx-auto bg-indigo-600 text-white rounded-full flex items-center justify-center text-2xl shadow mb-1">🏆</div>
-                                <div class="text-[10px] font-bold text-indigo-900 uppercase">Terverifikasi Resmi</div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-xs text-slate-500 font-semibold">Pengembang</div>
-                                <div class="text-xs font-bold text-indigo-700">Giga Inovation</div>
-                                <div class="text-[10px] text-slate-400">081329200985</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // --- TEACHER MODE & REAL-TIME MONITORING ---
-        function openTeacherLoginModal() {
-            const pinInput = document.getElementById('teacher-pin-input');
-            if (pinInput) pinInput.value = '';
-            const modal = document.getElementById('teacher-modal');
-            if (modal) modal.classList.remove('hidden');
-            setTimeout(() => {
-                if (pinInput) pinInput.focus();
-            }, 100);
-        }
-
-        function closeTeacherLoginModal() {
-            const modal = document.getElementById('teacher-modal');
-            if (modal) modal.classList.add('hidden');
-        }
-
-        function verifyTeacherPin() {
-            const pinInput = document.getElementById('teacher-pin-input');
-            if (!pinInput) return;
-            const pin = pinInput.value.trim();
-            if (pin === '123456') {
-                closeTeacherLoginModal();
-                navigateTo('teacher-dashboard');
-            } else {
-                showAlert("PIN Salah", "PIN Guru yang Anda masukkan salah. Silakan coba kembali (PIN default: 123456)", "❌");
-                pinInput.value = '';
-                pinInput.focus();
-            }
-        }
-
-        function renderTeacherDashboardScreen() {
-            return `
-                <div class="flex-grow flex flex-col p-4 sm:p-6 bg-white/70 backdrop-blur-md rounded-3xl art-card-shadow border border-white my-2">
-                    <div class="flex items-center justify-between mb-6 border-b pb-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="text-3xl">👨‍🏫</div>
-                            <div>
-                                <span class="text-xs font-bold text-indigo-600 uppercase">Dasbor Pemantauan Real-Time</span>
-                                <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800">Panel Guru</h3>
-                            </div>
-                        </div>
-                        <button onclick="navigateTo('map')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs">
-                            <i class="fa-solid fa-arrow-left mr-1"></i> Keluar Dasbor
-                        </button>
-                    </div>
-
-                    <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl mb-6 flex items-center justify-between">
-                        <div class="text-xs text-indigo-800 font-medium">
-                            Monitoring langsung aktivitas siswa yang sedang mengerjakan kuis via Firebase. Data diperbarui secara otomatis.
-                        </div>
-                        <div class="flex items-center space-x-1 text-xs font-bold text-emerald-600 bg-white px-3 py-1.5 rounded-xl shadow-sm">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span>Live Connected</span>
-                        </div>
-                    </div>
-
-                    <!-- Students Table Container -->
-                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex-grow">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-slate-50 border-b border-slate-200 text-xs font-extrabold text-slate-500 uppercase">
-                                        <th class="p-4">Nama Siswa</th>
-                                        <th class="p-4">Status</th>
-                                        <th class="p-4">Posisi Soal</th>
-                                        <th class="p-4">Nyawa Tersisa</th>
-                                        <th class="p-4 text-right">Nilai / Skor</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="student-table-body" class="divide-y divide-slate-100 text-sm">
-                                    <tr>
-                                        <td colspan="5" class="p-8 text-center text-slate-400 font-medium">Menunggu data siswa terhubung...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-function initTeacherRealtimeListener() {
-    // 1. Ambil elemen tabel
-    const tbody = document.getElementById('student-table-body');
-    
-    // 2. Cek apakah Firestore sudah siap dari window scope
-    if (!window.firebaseInstances || !window.firebaseInstances.db) {
-        if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-rose-500 font-bold">Firebase belum terhubung (Mode Offline).</td></tr>';
-        }
-        return;
-    }
-
-    const db = window.firebaseInstances.db;
-    const { collection, onSnapshot, query, orderBy } = window.firebaseModules;
-
-    try {
-        // 3. Gunakan path koleksi flat 'progres_siswa' agar terhubung langsung ke game siswa
-        const studentsColRef = collection(db, 'progres_siswa');
-        const q = query(studentsColRef, orderBy('timestamp', 'desc'));
-
-        // 4. Jalankan pendengar realtime realtime (onSnapshot)
-        unsubscribeTeacher = onSnapshot(q, (snapshot) => {
-            if (!tbody) return;
-
-            if (snapshot.empty) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">Belum ada siswa yang masuk ke kuis.</td></tr>';
-                return;
-            }
-
-            let html = '';
-            snapshot.forEach((docSnap) => {
-                const data = docSnap.data();
                 
-                // Kalkulasi visual nyawa hati (❤️)
-                const currentLives = typeof data.lives !== 'undefined' ? data.lives : 3;
-                const livesStr = '❤️'.repeat(Math.max(0, currentLives)) + '🖤'.repeat(Math.max(0, 3 - currentLives));
-                
-                // Mengambil huruf pertama untuk avatar siswa
-                const initial = data.name ? data.name.charAt(0).toUpperCase() : 'S';
-
-                html += `
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="p-4 font-bold text-slate-800 flex items-center space-x-2">
-                            <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-extrabold">${initial}</span>
-                            <span>${data.name || 'Tanpa Nama'}</span>
-                        </td>
-                        <td class="p-4">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-bold ${data.status === 'Selesai Kuis' ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'}">
-                                ${data.status || 'Mengerjakan'}
-                            </span>
-                        </td>
-                        <td class="p-4 font-semibold text-slate-700">Soal ke-${(data.currentQuestion || 0) + 1} dari ${data.totalQuestions || 50}</td>
-                        <td class="p-4 text-rose-600 tracking-wider">${livesStr}</td>
-                        <td class="p-4 text-right font-extrabold text-indigo-700">${data.score || 0} Poin</td>
-                    </tr>
-                `;
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    rowsHTML += `
+                        <tr class="border-b">
+                            <td class="p-2 font-bold">${data.nama_siswa || '-'}</td>
+                            <td class="p-2">${data.materi_yang_dimainkan || '-'}</td>
+                            <td class="p-2">Soal ke-${data.posisi_soal || 0} / 50</td>
+                            <td class="p-2">❤️ ${data.jumlah_nyawa_sisa ?? 3}</td>
+                            <td class="p-2 font-bold text-indigo-600">${data.skor || 0}</td>
+                        </tr>
+                    `;
+                });
+                tabelBody.innerHTML = rowsHTML;
             });
-
-            tbody.innerHTML = html;
-            
-            // Perbarui UI indikator koneksi di panel atas menjadi Live Connected jika ada elemennya
-            const connectionBadge = document.querySelector('.bg-indigo-50 span');
-            if (connectionBadge && connectionBadge.textContent.includes('Offline')) {
-                connectionBadge.className = 'px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800';
-                connectionBadge.innerHTML = '● Live Connected';
-            }
-        }, (error) => {
-            console.error("Firestore snapshot error:", error);
-        });
-
-    } catch (e) {
-        console.error("Error setting up teacher listener:", e);
-    }
-}
-
-// Initialize App on Window Load
-window.onload = function() {
-    render();
-};
+        }
+    </script>
+</body>
+</html>
